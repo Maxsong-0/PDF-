@@ -66,6 +66,60 @@ app.add_middleware(
 # 添加全局变量来存储文件名映射关系
 filename_mapping = {}  # 重命名后文件名 -> 原始文件名
 
+def clean_original_filename_files():
+    """清理downloads目录中的原始文件名格式文件（时间戳开头的文件）"""
+    downloads_dir = Path("downloads")
+    if not downloads_dir.exists():
+        return 0
+    
+    cleaned_count = 0
+    try:
+        # 识别原始文件名格式的文件（以时间戳开头，格式如：20250213165300083_xxxx.pdf）
+        import re
+        original_pattern = re.compile(r'^\d{17}_\d{4}.*\.pdf$')  # 匹配 20250213165300083_0022.pdf 格式
+        
+        for pdf_file in downloads_dir.glob("*.pdf"):
+            # 检查是否是原始文件名格式
+            if original_pattern.match(pdf_file.name):
+                try:
+                    os.remove(pdf_file)
+                    cleaned_count += 1
+                    logger.info(f"清理原始文件名格式文件: {pdf_file.name}")
+                except Exception as e:
+                    logger.warning(f"清理文件失败 {pdf_file.name}: {e}")
+    
+    except Exception as e:
+        logger.error(f"清理原始文件名格式文件时出错: {e}")
+    
+    if cleaned_count > 0:
+        logger.info(f"✅ 自动清理了 {cleaned_count} 个原始文件名格式文件")
+    
+    return cleaned_count
+
+def clean_all_downloads():
+    """清理downloads目录中的所有PDF文件（每次新识别前清理上次结果）"""
+    downloads_dir = Path("downloads")
+    if not downloads_dir.exists():
+        return 0
+    
+    cleaned_count = 0
+    try:
+        for pdf_file in downloads_dir.glob("*.pdf"):
+            try:
+                os.remove(pdf_file)
+                cleaned_count += 1
+                logger.info(f"清理上次处理文件: {pdf_file.name}")
+            except Exception as e:
+                logger.warning(f"清理文件失败 {pdf_file.name}: {e}")
+    
+    except Exception as e:
+        logger.error(f"清理downloads目录时出错: {e}")
+    
+    if cleaned_count > 0:
+        logger.info(f"🧹 清理了 {cleaned_count} 个上次处理的文件")
+    
+    return cleaned_count
+
 os.makedirs("static", exist_ok=True)
 os.makedirs("templates", exist_ok=True)
 os.makedirs("uploads", exist_ok=True)
@@ -1104,6 +1158,11 @@ async def upload_files(files: List[UploadFile] = File(...), enableBackup: str = 
     """上传文件并提取销货出库单号进行重命名"""
     global filename_mapping
     
+    # 开始处理前只清理原始文件名格式的文件（保留之前的正确结果）
+    cleaned_count = clean_original_filename_files()
+    if cleaned_count > 0:
+        logger.info(f"🧹 处理开始前清理了 {cleaned_count} 个原始文件名格式文件")
+    
     # 记录处理开始时downloads目录状态
     downloads_dir = Path("downloads")
     if downloads_dir.exists():
@@ -1813,34 +1872,55 @@ async def auto_fix_uploads():
             except Exception as e:
                 logger.error(f"从备份恢复失败 {backup_file.name}: {e}")
     
-    # 第三步：如果还是没有文件，直接从备份复制所有PDF文件
+    # 第三步：如果还是没有文件，从备份复制重命名格式的PDF文件（排除原始文件名格式）
     if backup_files_added == 0 and fixed_count == 0 and backup_date_dirs:
         latest_backup = backup_date_dirs[0]
-        logger.info(f"尝试从最新备份目录直接复制: {latest_backup}")
+        logger.info(f"尝试从最新备份目录复制重命名文件: {latest_backup}")
+        
+        import re
+        # 只复制重命名格式的文件（包含-或_的销货单号格式）
+        renamed_pattern = re.compile(r'^[0-9]{4}[-_][0-9]{8,}.*\.pdf$')
+        original_pattern = re.compile(r'^\d{17}_\d{4}.*\.pdf$')  # 排除原始文件名格式
         
         for backup_file in latest_backup.glob("*.pdf"):
             try:
-                destination = downloads_dir / backup_file.name
-                if not destination.exists():
-                    import shutil
-                    shutil.copy2(str(backup_file), str(destination))
-                    backup_files_added += 1
-                    results.append({
-                        "original": backup_file.name,
-                        "moved_to": backup_file.name,
-                        "success": True,
-                        "source": "backup-direct-all"
-                    })
-                    logger.info(f"直接从备份复制: {backup_file.name}")
+                # 检查是否是重命名格式的文件，排除原始文件名格式
+                if (renamed_pattern.match(backup_file.name) and 
+                    not original_pattern.match(backup_file.name)):
+                    
+                    destination = downloads_dir / backup_file.name
+                    if not destination.exists():
+                        import shutil
+                        shutil.copy2(str(backup_file), str(destination))
+                        backup_files_added += 1
+                        results.append({
+                            "original": backup_file.name,
+                            "moved_to": backup_file.name,
+                            "success": True,
+                            "source": "backup-renamed-only"
+                        })
+                        logger.info(f"从备份复制重命名文件: {backup_file.name}")
+                    else:
+                        logger.info(f"跳过已存在的文件: {backup_file.name}")
+                else:
+                    logger.debug(f"跳过原始文件名格式: {backup_file.name}")
             except Exception as e:
-                logger.error(f"直接从备份复制失败 {backup_file.name}: {e}")
+                logger.error(f"从备份复制失败 {backup_file.name}: {e}")
     
     total_fixed = fixed_count + backup_files_added
+    
+    # 自动修复完成后清理任何残留的原始文件名格式文件（备份恢复可能产生）
+    auto_cleaned_count = clean_original_filename_files()
+    if auto_cleaned_count > 0:
+        logger.info(f"🧹 自动修复后清理了 {auto_cleaned_count} 个原始文件名格式文件")
+    
     message = f"✅ 自动修复完成，共处理 {total_fixed} 个文件"
     if fixed_count > 0:
         message += f"（从uploads修复: {fixed_count}个）"
     if backup_files_added > 0:
         message += f"（从备份恢复: {backup_files_added}个）"
+    if auto_cleaned_count > 0:
+        message += f"（清理原始文件: {auto_cleaned_count}个）"
     
     logger.info(message)
     
@@ -1848,6 +1928,7 @@ async def auto_fix_uploads():
         "message": message,
         "fixed_count": fixed_count,
         "backup_files_added": backup_files_added,
+        "cleaned_count": auto_cleaned_count,
         "total_fixed": total_fixed,
         "details": results
     })
@@ -1855,19 +1936,15 @@ async def auto_fix_uploads():
 @app.post("/clear")
 async def clear_downloads():
     """清理下载文件"""
-    downloads_dir = Path("downloads")
-    cleared_count = 0
+    global filename_mapping
     
-    if downloads_dir.exists():
-        for file in downloads_dir.glob("*.pdf"):
-            try:
-                os.remove(file)
-                cleared_count += 1
-                logger.info(f"已删除: {file.name}")
-            except Exception as e:
-                logger.warning(f"清理文件失败 {file}: {e}")
+    # 使用统一的清理函数
+    cleared_count = clean_all_downloads()
     
-    logger.info(f"清理了 {cleared_count} 个下载文件")
+    # 清空文件名映射关系
+    filename_mapping.clear()
+    
+    logger.info(f"手动清理了 {cleared_count} 个下载文件")
     return JSONResponse({"message": f"✅ 已清理 {cleared_count} 个下载文件"})
 
 @app.post("/selective-backup")

@@ -1163,7 +1163,7 @@
 
             <div class="controls">
                 <button class="glass-btn glass-btn-primary" onclick="processFiles()" id="processBtn" disabled>
-                    🚀 识别并处理文件
+                    🧹 清理并处理文件
                 </button>
                 <button class="glass-btn glass-btn-danger" onclick="clearFiles()" id="clearBtn">
                     🗑️ 清理服务器文件
@@ -2693,8 +2693,26 @@ ${debugData.total_files !== (listData.files ? listData.files.length : 0) ? '3. �
             const backupInfo = document.getElementById('backupInfo');
 
             showProgress();
-            showOCRStatus('⚡ 启动双重验证OCR引擎...');
+            showOCRStatus('🧹 清理下载目录...');
             resultsSection.style.display = 'none';
+
+            try {
+                // 第一步：清理downloads目录
+                addLog('🧹 开始清理下载目录...', 'info');
+                const clearResponse = await fetch('/clear', { method: 'POST' });
+                if (clearResponse.ok) {
+                    const clearData = await clearResponse.json();
+                    addLog(`✅ 清理完成: ${clearData.message}`, 'success');
+                } else {
+                    addLog('⚠️ 清理过程中出现问题，但将继续处理', 'warning');
+                }
+                
+                // 短暂延迟后继续
+                await new Promise(resolve => setTimeout(resolve, 500));
+                showOCRStatus('⚡ 启动双重验证OCR引擎...');
+            } catch (error) {
+                addLog(`⚠️ 清理失败: ${error.message}，但将继续处理`, 'warning');
+            }
 
             try {
                 // 智能批量处理 - 优化大批量文件成功率
