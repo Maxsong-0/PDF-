@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "pdf-webui-renamer"
+version = "0.1.0"
+description = "PDF批量重命名工具 - WebUI版本"
+authors = ["Devin AI <devin-ai-integration[bot]@users.noreply.github.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = {extras = ["standard"], version = ">=0.104.0"}
+uvicorn = ">=0.24.0"
+python-multipart = ">=0.0.6"
+
+jinja2 = ">=3.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

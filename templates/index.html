@@ -1,0 +1,3528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF批量重命名处理工具 - Liquid Glass粉色版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, 
+                #ff9a9e 0%, 
+                #fecfef 25%, 
+                #fecfef 50%, 
+                #f093fb 75%, 
+                #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #444;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 极简背景装饰 - 性能优化 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 40px;
+            box-shadow: 
+                0 20px 40px rgba(255, 182, 193, 0.1),
+                0 10px 20px rgba(255, 192, 203, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 182, 193, 0.05) 50%, 
+                rgba(255, 255, 255, 0.1) 100%);
+            border-radius: 30px;
+            z-index: -1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            background: linear-gradient(45deg, #ff6b9d, #c44569, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 3rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-shadow: 0 4px 8px rgba(255, 107, 157, 0.2);
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: rgba(68, 68, 68, 0.8);
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(255, 182, 193, 0.08);
+            transition: transform 0.2s ease;
+            position: relative;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(255, 182, 193, 0.12);
+        }
+
+        .upload-section {
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 2px dashed rgba(255, 182, 193, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: rgba(255, 107, 157, 0.6);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 50px 30px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            border-radius: 15px;
+        }
+
+        .upload-area:hover {
+            transform: translateY(-2px);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            background: linear-gradient(45deg, #ff6b9d, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 25px;
+        }
+
+        .upload-text {
+            color: #444;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .upload-hint {
+            color: rgba(68, 68, 68, 0.7);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #444;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+            margin: 10px;
+            box-shadow: 0 6px 15px rgba(255, 182, 193, 0.08);
+        }
+
+        .glass-btn:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .glass-btn:active {
+            transform: translateY(0);
+        }
+
+        .glass-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .glass-btn-primary {
+            background: linear-gradient(45deg, 
+                rgba(255, 107, 157, 0.3), 
+                rgba(255, 159, 243, 0.3));
+            color: #444;
+            border-color: rgba(255, 107, 157, 0.3);
+        }
+
+        .glass-btn-primary:hover {
+            background: linear-gradient(45deg, 
+                rgba(255, 107, 157, 0.4), 
+                rgba(255, 159, 243, 0.4));
+        }
+
+        .glass-btn-success {
+            background: linear-gradient(45deg, 
+                rgba(102, 217, 174, 0.3), 
+                rgba(129, 236, 236, 0.3));
+            color: #444;
+            border-color: rgba(102, 217, 174, 0.3);
+        }
+
+        .glass-btn-danger {
+            background: linear-gradient(45deg, 
+                rgba(255, 107, 157, 0.3), 
+                rgba(245, 87, 108, 0.3));
+            color: #444;
+            border-color: rgba(255, 107, 157, 0.3);
+        }
+
+        .results-section {
+            margin-top: 30px;
+            display: none;
+            padding: 30px;
+        }
+
+        .results-header {
+            color: #444;
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .result-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 182, 193, 0.05);
+            overflow: hidden;
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 182, 193, 0.15);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .result-header {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+
+        .result-header:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .expand-icon {
+            user-select: none;
+            color: rgba(68, 68, 68, 0.7);
+            font-weight: bold;
+        }
+
+        .result-details {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .result-summary .result-filename {
+            color: #444;
+        }
+
+        .result-summary .result-status {
+            opacity: 0.8;
+        }
+
+        .result-success {
+            border-left-color: #66d9ae;
+            background: linear-gradient(45deg, 
+                rgba(102, 217, 174, 0.1), 
+                rgba(255, 255, 255, 0.1));
+        }
+
+        .result-error {
+            border-left-color: #ff6b9d;
+            background: linear-gradient(45deg, 
+                rgba(255, 107, 157, 0.1), 
+                rgba(255, 255, 255, 0.1));
+        }
+
+        .result-filename {
+            color: #444;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .result-message {
+            color: rgba(68, 68, 68, 0.8);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .result-log {
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.9rem;
+            color: rgba(68, 68, 68, 0.8);
+            white-space: pre-line;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #444;
+            margin: 30px 0;
+            padding: 40px;
+        }
+
+        .ocr-status {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: linear-gradient(45deg, rgba(255, 107, 157, 0.9), rgba(255, 159, 243, 0.9));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 15px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 8px 20px rgba(255, 107, 157, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 182, 193, 0.2);
+            border-radius: 50%;
+            border-top: 4px solid #ff6b9d;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .feature {
+            padding: 30px 25px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-3px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #ff6b9d, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .feature-title {
+            color: #444;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .feature-desc {
+            color: rgba(68, 68, 68, 0.7);
+            font-size: 1rem;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .drag-over {
+            border-color: #ff6b9d !important;
+            background: rgba(255, 107, 157, 0.1) !important;
+            transform: scale(1.02);
+        }
+
+        .file-list {
+            margin-top: 25px;
+            color: #444;
+        }
+
+        .file-list h3 {
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .backup-info {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #444;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 107, 157, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 107, 157, 0.5);
+        }
+
+        /* 现代化圆形进度条系统 */
+        .progress-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 30px;
+            margin: 20px 0;
+            display: none;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .circular-progress {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 20px;
+        }
+
+        .circular-progress svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+            filter: drop-shadow(0 4px 8px rgba(255, 107, 157, 0.3));
+        }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.15);
+            stroke-width: 10;
+        }
+
+        .progress-ring {
+            fill: none;
+            stroke: url(#progressGradient);
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 8px rgba(255, 107, 157, 0.5));
+        }
+
+        .progress-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #ff6b9d;
+            text-shadow: 0 2px 8px rgba(255, 107, 157, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        .progress-text {
+            color: #444;
+            font-weight: 600;
+            margin: 15px 0;
+            font-size: 1.1rem;
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px 10px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #ff6b9d;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* 背景自定义面板 */
+        .background-customizer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            transform: translateX(calc(100% + 20px));
+            transition: transform 0.3s ease;
+        }
+
+        .background-customizer.open {
+            transform: translateX(0);
+        }
+
+        .bg-toggle-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .bg-toggle-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .color-option.active {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px rgba(255, 107, 157, 0.5);
+        }
+
+        .custom-color-section {
+            margin-top: 20px;
+        }
+
+        .color-picker-group {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            align-items: center;
+        }
+
+        .color-picker {
+            width: 50px;
+            height: 30px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .batch-operations {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .batch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+
+
+        .performance-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+            color: #444;
+            display: none;
+        }
+
+        /* 实时日志窗口 */
+        .realtime-log {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 400px;
+            max-height: 300px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            font-family: 'Courier New', monospace;
+            z-index: 1000;
+        }
+
+        .log-header {
+            background: rgba(255, 107, 157, 0.8);
+            padding: 10px 15px;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .log-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .log-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .log-content {
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+        }
+
+        .log-timestamp {
+            color: #888;
+            margin-right: 8px;
+        }
+
+        .log-level-info { color: #4CAF50; }
+        .log-level-warn { color: #FF9800; }
+        .log-level-error { color: #F44336; }
+        .log-level-success { color: #8BC34A; }
+
+        /* 增强性能监控面板 */
+        .performance-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+
+        .perf-header {
+            color: #444;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .perf-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .perf-metric {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .perf-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ff6b9d;
+        }
+
+        .perf-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .perf-chart {
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bar {
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(45deg, #ff6b9d, #ff9ff3);
+            transition: height 0.3s ease;
+            border-radius: 2px 2px 0 0;
+        }
+
+        /* 性能模式切换器 */
+        .performance-toggle {
+            position: fixed;
+            bottom: 340px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 50px;
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #444;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            user-select: none;
+            z-index: 999;
+        }
+
+        .performance-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .performance-toggle.eco-mode {
+            background: rgba(102, 217, 174, 0.2);
+            border-color: rgba(102, 217, 174, 0.4);
+        }
+
+        /* 日志切换按钮 */
+        .log-toggle {
+            position: fixed;
+            bottom: 380px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            user-select: none;
+            z-index: 999;
+        }
+
+        .log-toggle:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: translateY(-2px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .upload-area {
+                padding: 40px 20px;
+            }
+
+            .background-customizer {
+                right: 10px;
+                top: 10px;
+                width: calc(100vw - 20px);
+                max-width: 300px;
+            }
+
+            .bg-toggle-btn {
+                right: 20px;
+                top: 20px;
+            }
+
+            .batch-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* 移动端实时日志优化 */
+            .realtime-log {
+                width: calc(100vw - 40px);
+                max-height: 250px;
+                left: 20px;
+                bottom: 10px;
+            }
+
+            /* 移动端性能面板优化 */
+            .performance-panel {
+                width: calc(100vw - 40px);
+                right: 20px;
+                bottom: 10px;
+            }
+
+            .perf-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            /* 移动端控制按钮优化 */
+            .performance-toggle, .log-toggle {
+                left: 10px;
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+
+            .performance-toggle {
+                bottom: 280px;
+            }
+
+            .log-toggle {
+                bottom: 320px;
+            }
+
+            /* 移动端圆形进度条优化 */
+            .circular-progress {
+                width: 100px;
+                height: 100px;
+            }
+
+            .progress-stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .stat-item {
+                padding: 10px;
+            }
+        }
+
+        /* 文件列表增强样式 */
+        .file-list-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .file-list-header h3 {
+            margin: 0;
+            color: #444;
+        }
+
+        .file-summary {
+            font-size: 0.9rem;
+            color: rgba(68,68,68,0.8);
+        }
+
+        .file-controls {
+            margin-left: auto;
+        }
+
+        .file-item {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .file-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        .file-pagination, .results-pagination {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* 结果显示增强样式 */
+        .results-header-enhanced {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .results-header-enhanced h3 {
+            margin: 0;
+            color: #444;
+        }
+
+        .results-summary {
+            font-size: 0.9rem;
+            color: rgba(68,68,68,0.8);
+        }
+
+        .results-controls {
+            margin-left: auto;
+        }
+
+        .results-filter {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .results-filter label {
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .results-filter label:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* 在极简模式下简化样式 */
+        .eco-mode-style .file-item,
+        .eco-mode-style .result-item {
+            transition: none !important;
+            background: rgba(255,255,255,0.03) !important;
+        }
+
+        .eco-mode-style .file-item:hover,
+        .eco-mode-style .result-item:hover {
+            transform: none !important;
+            background: rgba(255,255,255,0.06) !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景自定义按钮 -->
+    <div class="bg-toggle-btn" onclick="toggleBackgroundCustomizer()">
+        🎨
+    </div>
+
+    <!-- 背景自定义面板 -->
+    <div class="background-customizer" id="backgroundCustomizer">
+        <h4 style="color: #444; margin-bottom: 15px; text-align: center;">🎨 背景自定义</h4>
+        
+        <div style="color: #444; font-size: 0.9rem; margin-bottom: 10px;">预设主题:</div>
+        <div class="color-palette">
+            <div class="color-option active" data-theme="pink" style="background: linear-gradient(45deg, #ff9a9e, #fecfef);"></div>
+            <div class="color-option" data-theme="blue" style="background: linear-gradient(45deg, #667eea, #764ba2);"></div>
+            <div class="color-option" data-theme="green" style="background: linear-gradient(45deg, #56ab2f, #a8edea);"></div>
+            <div class="color-option" data-theme="purple" style="background: linear-gradient(45deg, #da22ff, #9733ee);"></div>
+            <div class="color-option" data-theme="orange" style="background: linear-gradient(45deg, #f093fb, #f5576c);"></div>
+            <div class="color-option" data-theme="teal" style="background: linear-gradient(45deg, #4facfe, #00f2fe);"></div>
+            <div class="color-option" data-theme="sunset" style="background: linear-gradient(45deg, #fa709a, #fee140);"></div>
+            <div class="color-option" data-theme="ocean" style="background: linear-gradient(45deg, #2196f3, #21cbf3);"></div>
+        </div>
+
+        <div class="custom-color-section">
+            <div style="color: #444; font-size: 0.9rem; margin-bottom: 10px;">自定义渐变:</div>
+            <div class="color-picker-group">
+                <input type="color" id="color1" class="color-picker" value="#ff9a9e">
+                <span style="color: #444;">→</span>
+                <input type="color" id="color2" class="color-picker" value="#fecfef">
+            </div>
+            <button class="glass-btn" style="width: 100%; margin-top: 10px;" onclick="applyCustomGradient()">
+                ✨ 应用自定义
+            </button>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="glass-btn" style="width: 100%;" onclick="resetBackground()">
+                🔄 重置默认
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🌸 PDF批量重命名工具</h1>
+            <p>基于AI高精度OCR识别销货出库单号，智能角度检测，安全下载重命名文件 - Liquid Glass粉色版</p>
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 15px; margin-top: 15px; font-size: 0.9rem; color: rgba(68,68,68,0.8);">
+                🔄 <strong>双重验证策略:</strong> Tesseract快速初识别 + EasyOCR精确确认，兼顾速度与精度！首次使用需下载AI模型。
+            </div>
+        </div>
+
+        <!-- 批量操作面板 -->
+        <div class="glass-card batch-operations">
+            <h3 style="color: #444; margin-bottom: 15px; text-align: center;">⚡ 批量操作</h3>
+            <div class="batch-grid">
+                <button class="glass-btn" onclick="toggleBackupMode()" id="backupToggleBtn" style="width: 100%;">
+                    💾 备份: 开启
+                </button>
+                <button class="glass-btn glass-btn-success" onclick="batchRename()" style="width: 100%;">
+                    🔄 批量处理
+                </button>
+                <button class="glass-btn" onclick="showPerformanceInfo()" style="width: 100%;">
+                    📊 性能监控
+                </button>
+                <button class="glass-btn" onclick="showPerformanceTips()" style="width: 100%;">
+                    💡 性能优化
+                </button>
+                <button class="glass-btn" onclick="debugDownloadSystem()" style="width: 100%;">
+                    🔧 调试下载
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-card upload-section" id="uploadSection">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击选择PDF文件或拖拽到此处</div>
+                <div class="upload-hint">支持多文件批量上传，自动识别销货出库单号，处理后可下载重命名文件</div>
+            </div>
+            <input type="file" id="fileInput" multiple accept=".pdf">
+            
+            <div class="file-list" id="fileList" style="display: none;">
+                <div class="file-list-header">
+                    <h3 style="margin: 0; display: inline-block;">已选择的文件：</h3>
+                    <div class="file-summary" id="fileSummary" style="display: inline-block; margin-left: 15px; color: rgba(68,68,68,0.8);"></div>
+                    <div class="file-controls" id="fileControls" style="float: right;"></div>
+                </div>
+                <div id="selectedFiles"></div>
+                <div class="file-pagination" id="filePagination" style="display: none;"></div>
+            </div>
+
+            <div class="controls">
+                <button class="glass-btn glass-btn-primary" onclick="processFiles()" id="processBtn" disabled>
+                    🚀 识别并处理文件
+                </button>
+                <button class="glass-btn glass-btn-danger" onclick="clearFiles()" id="clearBtn">
+                    🗑️ 清理服务器文件
+                </button>
+                <button class="glass-btn" onclick="showBackupInfo()" id="backupBtn">
+                    📂 备份信息
+                </button>
+                <button class="glass-btn" onclick="autoFixUploads()" id="autoFixBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    🔧 自动修复下载
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>正在处理PDF文件，请稍候...</div>
+        </div>
+
+        <!-- 现代化圆形进度条 -->
+        <div class="progress-container" id="progressContainer">
+            <div class="circular-progress">
+                <svg>
+                    <defs>
+                        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#ff6b9d"/>
+                            <stop offset="100%" style="stop-color:#ff9ff3"/>
+                        </linearGradient>
+                    </defs>
+                    <circle class="progress-ring-bg" cx="70" cy="70" r="60"></circle>
+                    <circle class="progress-ring" cx="70" cy="70" r="60" 
+                            stroke-dasharray="377" stroke-dashoffset="377" id="progressRing"></circle>
+                </svg>
+                <div class="progress-percentage" id="progressPercentage">0%</div>
+            </div>
+            <div class="progress-text" id="progressText">准备处理...</div>
+            <div class="progress-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="statFiles">0</span>
+                    <div class="stat-label">已处理文件</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statSpeed">0</span>
+                    <div class="stat-label">处理速度/秒</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statETA">--</span>
+                    <div class="stat-label">预计剩余时间</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card results-section" id="resultsSection">
+            <div class="results-header-enhanced">
+                <h3 style="margin: 0; display: inline-block;">处理结果</h3>
+                <div class="results-summary" id="resultsSummary" style="display: inline-block; margin-left: 15px; color: rgba(68,68,68,0.8);"></div>
+                <div class="results-controls" id="resultsControls" style="float: right;"></div>
+            </div>
+            <div class="results-filter" id="resultsFilter" style="display: none; margin: 15px 0;"></div>
+            <div id="results"></div>
+            <div class="results-pagination" id="resultsPagination" style="display: none;"></div>
+            <div id="backupInfo" class="backup-info" style="display: none;"></div>
+        </div>
+
+
+
+        <div class="glass-card" style="margin-top: 30px;" id="backupSection" style="display: none;">
+            <div style="padding: 30px;">
+                <h3 style="color: #444; margin-bottom: 20px; text-align: center;">📂 备份管理</h3>
+                <div id="backupDetails"></div>
+                <div class="controls">
+                    <button class="glass-btn glass-btn-danger" onclick="clearAllBackups()">
+                        🗑️ 清理所有备份
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="glass-card feature">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">双重验证OCR</div>
+                <div class="feature-desc">Tesseract快速扫描+EasyOCR精确验证，智能双引擎确保最高识别精度</div>
+            </div>
+            <div class="glass-card feature">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-title">智能角度检测</div>
+                <div class="feature-desc">三种方法综合判断文档角度，自动校正旋转文档</div>
+            </div>
+            <div class="glass-card feature">
+                <div class="feature-icon">📂</div>
+                <div class="feature-title">安全下载系统</div>
+                <div class="feature-desc">处理后提供重命名文件下载，原文件自动备份保护</div>
+            </div>
+            <div class="glass-card feature">
+                <div class="feature-icon">💎</div>
+                <div class="feature-title">Liquid Glass界面</div>
+                <div class="feature-desc">现代化粉色玻璃质感界面，美观易用的操作体验</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 实时日志窗口 -->
+    <div class="realtime-log" id="realtimeLog">
+        <div class="log-header">
+            <span>📊 实时处理日志</span>
+            <div class="log-controls">
+                <button class="log-btn" onclick="clearLogs()">清空</button>
+                <button class="log-btn" onclick="exportLogs()">导出</button>
+                <button class="log-btn" onclick="toggleLogVisibility()">×</button>
+            </div>
+        </div>
+        <div class="log-content" id="logContent">
+            <div class="log-entry">
+                <span class="log-timestamp">--:--:--</span>
+                <span class="log-level-info">系统就绪，等待文件处理...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 增强性能监控面板 -->
+    <div class="performance-panel" id="performancePanel">
+        <div class="perf-header">📈 性能监控中心</div>
+        <div class="perf-metrics">
+            <div class="perf-metric">
+                <div class="perf-value" id="perfFiles">0</div>
+                <div class="perf-label">处理文件</div>
+            </div>
+            <div class="perf-metric">
+                <div class="perf-value" id="perfTime">0s</div>
+                <div class="perf-label">总耗时</div>
+            </div>
+            <div class="perf-metric">
+                <div class="perf-value" id="perfMemory">--</div>
+                <div class="perf-label">内存使用</div>
+            </div>
+            <div class="perf-metric">
+                <div class="perf-value" id="perfCPU">--</div>
+                <div class="perf-label">CPU使用</div>
+            </div>
+        </div>
+        <div class="perf-chart" id="perfChart">
+            <!-- 动态生成的性能图表条 -->
+        </div>
+        <div style="font-size: 0.8rem; color: #666; text-align: center; margin-top: 10px;">
+            <span id="perfOCR">OCR引擎: 待检测</span>
+        </div>
+    </div>
+
+    <!-- 控制按钮组 -->
+    <div class="log-toggle" onclick="toggleLogVisibility()">
+        📋 实时日志
+    </div>
+
+    <div class="performance-toggle" id="performanceToggle" onclick="togglePerformanceMode()">
+        🚀 标准模式
+    </div>
+
+    <!-- 双重验证OCR状态指示器 -->
+    <div class="ocr-status" id="ocrStatus">
+        ⚡ 双重验证OCR识别中...
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        let isProcessing = false;
+        let backupMode = true; // 默认开启备份
+        let ecoMode = false; // 性能模式
+        let performanceData = {
+            processedFiles: 0,
+            startTime: null,
+            memoryUsage: 0
+        };
+
+        // 处理结果管理
+        let processResults = [];
+        let resultsState = {
+            currentPage: 1,
+            itemsPerPage: 10,
+            filter: 'all', // 'all', 'success', 'error'
+            allExpanded: false,
+            showPagination: false
+        };
+
+        // 实时日志系统
+        let logEntries = [];
+        let logVisible = false;
+        
+        // 性能监控增强数据
+        let performanceChart = {
+            data: [],
+            maxPoints: 50
+        };
+
+        // 背景主题配置
+        const backgroundThemes = {
+            pink: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #fecfef 50%, #f093fb 75%, #f5576c 100%)',
+            blue: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            green: 'linear-gradient(135deg, #56ab2f 0%, #a8edea 100%)',
+            purple: 'linear-gradient(135deg, #da22ff 0%, #9733ee 100%)',
+            orange: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            teal: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            sunset: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            ocean: 'linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)'
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initColorPalette();
+            initPerformanceMonitoring();
+            initBackupMode();
+            loadSavedBackground(); // 新增：加载保存的背景
+            initPerformanceMode(); // 新增：初始化性能模式
+            
+            // 新增初始化
+            addLog('PDF批量重命名工具已就绪 - 双重验证OCR版本', 'success');
+            initEnhancedPerformanceMonitoring();
+            
+            // 添加键盘快捷键
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'l') {
+                    e.preventDefault();
+                    toggleLogVisibility();
+                }
+                if (e.ctrlKey && e.key === 'p') {
+                    e.preventDefault();
+                    togglePerformancePanel();
+                }
+            });
+        });
+
+        // 新增：加载保存的背景设置
+        function loadSavedBackground() {
+            // 首先检查是否有自定义渐变
+            const customGradient = localStorage.getItem('customGradient');
+            if (customGradient) {
+                document.body.style.background = customGradient;
+                // 移除所有预设主题的active状态
+                document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+                return;
+            }
+            
+            // 然后检查是否有选择的主题
+            const selectedTheme = localStorage.getItem('selectedTheme');
+            if (selectedTheme && backgroundThemes[selectedTheme]) {
+                applyTheme(selectedTheme);
+                // 设置对应主题的active状态
+                const themeOption = document.querySelector(`[data-theme="${selectedTheme}"]`);
+                if (themeOption) {
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+                    themeOption.classList.add('active');
+                }
+            }
+            
+            // 如果有保存的自定义颜色，也要恢复到颜色选择器中
+            const savedColor1 = localStorage.getItem('customColor1');
+            const savedColor2 = localStorage.getItem('customColor2');
+            if (savedColor1) document.getElementById('color1').value = savedColor1;
+            if (savedColor2) document.getElementById('color2').value = savedColor2;
+        }
+
+        // 文件选择处理
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            selectedFiles = Array.from(e.target.files);
+            updateFileList();
+        });
+
+        // 拖拽上传
+        const uploadSection = document.getElementById('uploadSection');
+        
+        uploadSection.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadSection.classList.add('drag-over');
+        });
+
+        uploadSection.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('drag-over');
+        });
+
+        uploadSection.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('drag-over');
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => 
+                file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+            );
+            
+            if (files.length > 0) {
+                selectedFiles = files;
+                updateFileList();
+            } else {
+                alert('请选择PDF文件！');
+            }
+        });
+
+        // 文件列表管理状态
+        let fileListState = {
+            currentPage: 1,
+            itemsPerPage: 10,
+            isCollapsed: false,
+            showAll: false
+        };
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            const selectedFilesDiv = document.getElementById('selectedFiles');
+            const fileSummary = document.getElementById('fileSummary');
+            const fileControls = document.getElementById('fileControls');
+            const filePagination = document.getElementById('filePagination');
+            const processBtn = document.getElementById('processBtn');
+
+            if (selectedFiles.length === 0) {
+                fileList.style.display = 'none';
+                processBtn.disabled = true;
+                return;
+            }
+
+            fileList.style.display = 'block';
+            processBtn.disabled = false;
+
+            // 计算文件总大小
+            const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+            const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+            
+            // 更新摘要信息
+            const fileCount = selectedFiles.length;
+            fileSummary.innerHTML = `
+                <span style="font-weight: 600;">${fileCount} 个文件</span>
+                <span style="margin-left: 10px;">总计 ${totalSizeMB} MB</span>
+                ${fileCount > 50 ? '<span style="color: #ff6b9d; margin-left: 10px;">⚠️ 文件数量较多</span>' : ''}
+            `;
+
+            // 更新控制按钮
+            fileControls.innerHTML = generateFileControls();
+
+            // 根据文件数量决定显示策略
+            if (fileCount <= 5) {
+                // 少量文件：直接显示全部
+                renderFileList(selectedFiles, false);
+                filePagination.style.display = 'none';
+            } else if (fileCount <= 20) {
+                // 中等数量：提供折叠选项，默认显示全部
+                if (fileListState.isCollapsed) {
+                    renderFileList(selectedFiles.slice(0, 5), true);
+                } else {
+                    renderFileList(selectedFiles, false);
+                }
+                filePagination.style.display = 'none';
+            } else {
+                // 大量文件：默认折叠，分页显示
+                if (fileListState.showAll) {
+                    renderPaginatedFileList();
+                } else {
+                    renderFileList(selectedFiles.slice(0, 5), true);
+                    filePagination.style.display = 'none';
+                }
+            }
+
+            // 性能警告
+            if (fileCount > 50) {
+                showFilePerformanceWarning(fileCount);
+            }
+        }
+
+        function generateFileControls() {
+            const fileCount = selectedFiles.length;
+            let controls = [];
+
+            if (fileCount > 5) {
+                if (fileCount <= 20) {
+                    // 中等数量文件的控制
+                    const toggleText = fileListState.isCollapsed ? '展开全部' : '折叠列表';
+                    const toggleIcon = fileListState.isCollapsed ? '📖' : '📋';
+                    controls.push(`
+                        <button class="glass-btn" onclick="toggleFileListCollapse()" style="padding: 5px 10px; font-size: 0.8rem; margin-right: 5px;">
+                            ${toggleIcon} ${toggleText}
+                        </button>
+                    `);
+                } else {
+                    // 大量文件的控制
+                    if (fileListState.showAll) {
+                        controls.push(`
+                            <button class="glass-btn" onclick="toggleShowAllFiles()" style="padding: 5px 10px; font-size: 0.8rem; margin-right: 5px;">
+                                📋 收起列表
+                            </button>
+                        `);
+                    } else {
+                        controls.push(`
+                            <button class="glass-btn" onclick="toggleShowAllFiles()" style="padding: 5px 10px; font-size: 0.8rem; margin-right: 5px;">
+                                📖 分页浏览
+                            </button>
+                        `);
+                    }
+                }
+            }
+
+            // 清理按钮
+            controls.push(`
+                <button class="glass-btn glass-btn-danger" onclick="clearSelectedFiles()" style="padding: 5px 10px; font-size: 0.8rem;">
+                    🗑️ 清空
+                </button>
+            `);
+
+            return controls.join('');
+        }
+
+        function renderFileList(files, showMoreHint = false) {
+            const selectedFilesDiv = document.getElementById('selectedFiles');
+            
+            let html = files.map((file, index) => 
+                `<div class="file-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                    <div style="flex: 1; display: flex; align-items: center;">
+                        <span style="margin-right: 10px; color: rgba(68,68,68,0.6); font-size: 0.8rem;">${index + 1}.</span>
+                        <span style="flex: 1;">📄 ${file.name.length > 40 ? file.name.substring(0, 40) + '...' : file.name}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: rgba(68,68,68,0.7); font-size: 0.9rem;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        <button onclick="removeFile(${selectedFiles.indexOf(file)})" style="background: none; border: none; color: #ff6b9d; cursor: pointer; padding: 2px;">
+                            ✕
+                        </button>
+                    </div>
+                </div>`
+            ).join('');
+
+            if (showMoreHint && selectedFiles.length > files.length) {
+                const remainingCount = selectedFiles.length - files.length;
+                html += `
+                    <div style="text-align: center; padding: 15px; color: rgba(68,68,68,0.6); font-style: italic;">
+                        ... 还有 ${remainingCount} 个文件未显示
+                    </div>
+                `;
+            }
+
+            selectedFilesDiv.innerHTML = html;
+        }
+
+        function renderPaginatedFileList() {
+            const totalPages = Math.ceil(selectedFiles.length / fileListState.itemsPerPage);
+            const startIndex = (fileListState.currentPage - 1) * fileListState.itemsPerPage;
+            const endIndex = startIndex + fileListState.itemsPerPage;
+            const currentPageFiles = selectedFiles.slice(startIndex, endIndex);
+
+            renderFileList(currentPageFiles);
+
+            // 渲染分页控件
+            const filePagination = document.getElementById('filePagination');
+            filePagination.style.display = 'block';
+            filePagination.innerHTML = generatePaginationControls(totalPages);
+        }
+
+        function generatePaginationControls(totalPages) {
+            if (totalPages <= 1) return '';
+
+            let controls = ['<div style="text-align: center; padding: 15px;">'];
+            
+            // 上一页按钮
+            if (fileListState.currentPage > 1) {
+                controls.push(`
+                    <button class="glass-btn" onclick="changeFilePage(${fileListState.currentPage - 1})" style="margin: 0 5px; padding: 5px 10px;">
+                        ← 上一页
+                    </button>
+                `);
+            }
+
+            // 页码显示
+            controls.push(`
+                <span style="margin: 0 15px; color: rgba(68,68,68,0.8);">
+                    第 ${fileListState.currentPage} 页 / 共 ${totalPages} 页
+                </span>
+            `);
+
+            // 下一页按钮
+            if (fileListState.currentPage < totalPages) {
+                controls.push(`
+                    <button class="glass-btn" onclick="changeFilePage(${fileListState.currentPage + 1})" style="margin: 0 5px; padding: 5px 10px;">
+                        下一页 →
+                    </button>
+                `);
+            }
+
+            controls.push('</div>');
+            return controls.join('');
+        }
+
+        // 文件列表控制函数
+        function toggleFileListCollapse() {
+            fileListState.isCollapsed = !fileListState.isCollapsed;
+            updateFileList();
+            addLog(`文件列表${fileListState.isCollapsed ? '折叠' : '展开'}`, 'info');
+        }
+
+        function toggleShowAllFiles() {
+            fileListState.showAll = !fileListState.showAll;
+            fileListState.currentPage = 1; // 重置到第一页
+            updateFileList();
+            addLog(`${fileListState.showAll ? '开启' : '关闭'}分页浏览模式`, 'info');
+        }
+
+        function changeFilePage(newPage) {
+            fileListState.currentPage = newPage;
+            renderPaginatedFileList();
+            addLog(`切换到第${newPage}页`, 'info');
+        }
+
+        function removeFile(index) {
+            if (index >= 0 && index < selectedFiles.length) {
+                const fileName = selectedFiles[index].name;
+                selectedFiles.splice(index, 1);
+                updateFileList();
+                addLog(`移除文件: ${fileName}`, 'info');
+            }
+        }
+
+        function clearSelectedFiles() {
+            if (selectedFiles.length > 0 && confirm(`确定要清空所有 ${selectedFiles.length} 个已选择的文件吗？`)) {
+                const count = selectedFiles.length;
+                selectedFiles = [];
+                updateFileList();
+                
+                // 重置文件输入
+                document.getElementById('fileInput').value = '';
+                
+                addLog(`清空了 ${count} 个选择的文件`, 'success');
+            }
+        }
+
+        function showFilePerformanceWarning(fileCount) {
+            // 避免重复显示警告
+            if (sessionStorage.getItem('fileWarningShown') === 'true') {
+                return;
+            }
+
+            setTimeout(() => {
+                const shouldContinue = confirm(`
+⚠️ 性能提醒
+
+您选择了 ${fileCount} 个文件，这可能会：
+• 占用较多内存和处理时间
+• 影响界面响应速度
+• 增加网络传输负担
+
+建议：
+✅ 分批处理（每次10-20个文件）
+✅ 开启极简模式以提升性能
+✅ 关闭其他浏览器标签页
+
+是否继续处理当前文件？
+（点击"取消"可以重新选择文件）
+                `);
+
+                if (!shouldContinue) {
+                    clearSelectedFiles();
+                } else {
+                    sessionStorage.setItem('fileWarningShown', 'true');
+                    // 自动切换到极简模式
+                    if (!ecoMode) {
+                        const switchToEco = confirm('是否切换到极简模式以获得更好的性能？');
+                        if (switchToEco) {
+                            togglePerformanceMode();
+                        }
+                    }
+                }
+            }, 500);
+        }
+
+        // ============ 结果显示管理系统 ============
+        function updateResultsDisplay() {
+            if (!processResults || processResults.length === 0) return;
+
+            const results = document.getElementById('results');
+            const resultsSummary = document.getElementById('resultsSummary');
+            const resultsControls = document.getElementById('resultsControls');
+            const resultsFilter = document.getElementById('resultsFilter');
+            const resultsPagination = document.getElementById('resultsPagination');
+
+            // 更新摘要信息
+            const successCount = processResults.filter(r => r.success).length;
+            const errorCount = processResults.length - successCount;
+            resultsSummary.innerHTML = `
+                <span style="font-weight: 600;">${processResults.length} 个结果</span>
+                <span style="margin-left: 10px; color: #4CAF50;">✅ ${successCount}</span>
+                <span style="margin-left: 10px; color: #f44336;">❌ ${errorCount}</span>
+            `;
+
+            // 更新控制按钮
+            resultsControls.innerHTML = generateResultsControls();
+
+            // 更新筛选器
+            if (processResults.length > 10) {
+                resultsFilter.style.display = 'block';
+                resultsFilter.innerHTML = generateResultsFilter();
+            } else {
+                resultsFilter.style.display = 'none';
+            }
+
+            // 根据结果数量决定显示策略
+            if (processResults.length <= 10) {
+                // 少量结果：直接显示全部
+                renderResults(processResults);
+                resultsPagination.style.display = 'none';
+                resultsState.showPagination = false;
+            } else {
+                // 大量结果：分页显示
+                if (resultsState.showPagination) {
+                    renderPaginatedResults();
+                } else {
+                    // 默认折叠显示前5个
+                    renderResults(processResults.slice(0, 5), true);
+                    resultsPagination.style.display = 'none';
+                }
+            }
+        }
+
+        function generateResultsControls() {
+            const resultCount = processResults.length;
+            let controls = [];
+
+            if (resultCount > 10) {
+                // 大量结果的控制
+                if (resultsState.showPagination) {
+                    controls.push(`
+                        <button class="glass-btn" onclick="toggleResultsPagination()" style="padding: 5px 10px; font-size: 0.8rem; margin-right: 5px;">
+                            📋 收起结果
+                        </button>
+                    `);
+                } else {
+                    controls.push(`
+                        <button class="glass-btn" onclick="toggleResultsPagination()" style="padding: 5px 10px; font-size: 0.8rem; margin-right: 5px;">
+                            📖 分页浏览
+                        </button>
+                    `);
+                }
+            }
+
+            // 展开/折叠控制
+            if (resultCount > 5) {
+                const toggleText = resultsState.allExpanded ? '折叠所有' : '展开所有';
+                const toggleIcon = resultsState.allExpanded ? '📋' : '📖';
+                controls.push(`
+                    <button class="glass-btn" onclick="toggleAllResultDetails()" style="padding: 5px 10px; font-size: 0.8rem; margin-right: 5px;">
+                        ${toggleIcon} ${toggleText}
+                    </button>
+                `);
+            }
+
+            // 导出按钮
+            controls.push(`
+                <button class="glass-btn" onclick="exportResults()" style="padding: 5px 10px; font-size: 0.8rem;">
+                    📄 导出报告
+                </button>
+            `);
+
+            return controls.join('');
+        }
+
+        function generateResultsFilter() {
+            return `
+                <div style="text-align: center;">
+                    <label style="margin-right: 20px;">
+                        <input type="radio" name="resultFilter" value="all" ${resultsState.filter === 'all' ? 'checked' : ''} onchange="changeResultsFilter('all')" style="margin-right: 5px;">
+                        🔍 全部 (${processResults.length})
+                    </label>
+                    <label style="margin-right: 20px;">
+                        <input type="radio" name="resultFilter" value="success" ${resultsState.filter === 'success' ? 'checked' : ''} onchange="changeResultsFilter('success')" style="margin-right: 5px;">
+                        ✅ 成功 (${processResults.filter(r => r.success).length})
+                    </label>
+                    <label>
+                        <input type="radio" name="resultFilter" value="error" ${resultsState.filter === 'error' ? 'checked' : ''} onchange="changeResultsFilter('error')" style="margin-right: 5px;">
+                        ❌ 失败 (${processResults.filter(r => !r.success).length})
+                    </label>
+                </div>
+            `;
+        }
+
+        function renderResults(resultsToShow, showMoreHint = false) {
+            const results = document.getElementById('results');
+            
+            let html = resultsToShow.map((result, index) => 
+                `<div class="result-item ${result.success ? 'result-success' : 'result-error'}" data-index="${index}">
+                    <div class="result-header" onclick="toggleResultDetails(${processResults.indexOf(result)})" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 15px; border-radius: 8px; background: rgba(255,255,255,0.1);">
+                        <div class="result-summary">
+                            <div class="result-filename" style="font-weight: 600; margin-bottom: 5px;">
+                                ${result.success ? '✅' : '❌'} ${result.filename.length > 50 ? result.filename.substring(0, 50) + '...' : result.filename}
+                            </div>
+                            <div class="result-status" style="font-size: 0.9rem; color: rgba(68,68,68,0.8);">
+                                ${result.success ? 
+                                    `成功重命名为: ${(result.new_filename || '未知').length > 40 ? (result.new_filename || '未知').substring(0, 40) + '...' : (result.new_filename || '未知')}` : 
+                                    '处理失败'
+                                }
+                            </div>
+                        </div>
+                        <div class="result-actions" style="display: flex; align-items: center; gap: 10px;">
+                            ${result.success ? `
+                                <button class="glass-btn glass-btn-success" onclick="event.stopPropagation(); console.log('下载: ${result.new_filename}'); downloadSingleFile('${result.new_filename || result.filename}')" style="padding: 8px 15px; font-size: 0.9rem;">
+                                    💾 下载
+                                </button>
+                            ` : ''}
+                            <span class="expand-icon" id="expand-icon-${processResults.indexOf(result)}" style="font-size: 1.2rem; transition: transform 0.3s ease;">
+                                ${resultsState.allExpanded ? '▲' : '▼'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="result-details" id="details-${processResults.indexOf(result)}" style="display: ${resultsState.allExpanded ? 'block' : 'none'}; padding: 15px; margin-top: 10px; background: rgba(0,0,0,0.1); border-radius: 8px; border-left: 4px solid ${result.success ? '#4CAF50' : '#f44336'};">
+                        <div class="result-message" style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px;">
+                            <strong>处理消息:</strong><br>
+                            ${result.message}
+                        </div>
+                        ${result.new_filename ? `
+                            <div class="result-rename-info" style="margin-bottom: 10px; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 6px;">
+                                <strong>重命名信息:</strong><br>
+                                📄 原文件名: ${result.filename}<br>
+                                ➡️ 新文件名: ${result.new_filename}<br>
+                                ${result.order_number ? `🔢 识别号码: ${result.order_number}` : ''}
+                            </div>
+                        ` : ''}
+                        ${result.backup_path && result.backup_path !== '未启用备份' ? `
+                            <div class="result-backup-info" style="margin-bottom: 10px; padding: 10px; background: rgba(33, 150, 243, 0.1); border-radius: 6px;">
+                                <strong>备份信息:</strong><br>
+                                📂 备份路径: ${result.backup_path}
+                            </div>
+                        ` : ''}
+                        <div class="result-log" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; max-height: 200px; overflow-y: auto;">
+                            <strong>OCR识别日志:</strong><br>
+                            ${result.log.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                </div>`
+            ).join('');
+
+            if (showMoreHint && processResults.length > resultsToShow.length) {
+                const remainingCount = processResults.length - resultsToShow.length;
+                html += `
+                    <div style="text-align: center; padding: 20px; color: rgba(68,68,68,0.6); font-style: italic; background: rgba(255,255,255,0.05); border-radius: 8px; margin-top: 15px;">
+                        ... 还有 ${remainingCount} 个结果未显示
+                        <br><button class="glass-btn" onclick="toggleResultsPagination()" style="margin-top: 10px; padding: 8px 15px;">📖 查看全部</button>
+                    </div>
+                `;
+            }
+
+            results.innerHTML = html;
+        }
+
+        function renderPaginatedResults() {
+            const filteredResults = getFilteredResults();
+            const totalPages = Math.ceil(filteredResults.length / resultsState.itemsPerPage);
+            const startIndex = (resultsState.currentPage - 1) * resultsState.itemsPerPage;
+            const endIndex = startIndex + resultsState.itemsPerPage;
+            const currentPageResults = filteredResults.slice(startIndex, endIndex);
+
+            renderResults(currentPageResults);
+
+            // 渲染分页控件
+            const resultsPagination = document.getElementById('resultsPagination');
+            resultsPagination.style.display = 'block';
+            resultsPagination.innerHTML = generateResultsPaginationControls(totalPages, filteredResults.length);
+        }
+
+        function generateResultsPaginationControls(totalPages, totalResults) {
+            if (totalPages <= 1) return '';
+
+            let controls = ['<div style="text-align: center; padding: 15px;">'];
+            
+            // 上一页按钮
+            if (resultsState.currentPage > 1) {
+                controls.push(`
+                    <button class="glass-btn" onclick="changeResultsPage(${resultsState.currentPage - 1})" style="margin: 0 5px; padding: 5px 10px;">
+                        ← 上一页
+                    </button>
+                `);
+            }
+
+            // 页码显示
+            controls.push(`
+                <span style="margin: 0 15px; color: rgba(68,68,68,0.8);">
+                    第 ${resultsState.currentPage} 页 / 共 ${totalPages} 页 (${totalResults} 个结果)
+                </span>
+            `);
+
+            // 下一页按钮
+            if (resultsState.currentPage < totalPages) {
+                controls.push(`
+                    <button class="glass-btn" onclick="changeResultsPage(${resultsState.currentPage + 1})" style="margin: 0 5px; padding: 5px 10px;">
+                        下一页 →
+                    </button>
+                `);
+            }
+
+            controls.push('</div>');
+            return controls.join('');
+        }
+
+        function getFilteredResults() {
+            if (resultsState.filter === 'all') {
+                return processResults;
+            } else if (resultsState.filter === 'success') {
+                return processResults.filter(r => r.success);
+            } else if (resultsState.filter === 'error') {
+                return processResults.filter(r => !r.success);
+            }
+            return processResults;
+        }
+
+        // 结果控制函数
+        function toggleResultsPagination() {
+            resultsState.showPagination = !resultsState.showPagination;
+            resultsState.currentPage = 1; // 重置到第一页
+            updateResultsDisplay();
+            addLog(`${resultsState.showPagination ? '开启' : '关闭'}结果分页浏览`, 'info');
+        }
+
+        function toggleAllResultDetails() {
+            resultsState.allExpanded = !resultsState.allExpanded;
+            updateResultsDisplay();
+            addLog(`${resultsState.allExpanded ? '展开' : '折叠'}所有结果详情`, 'info');
+        }
+
+        function changeResultsFilter(filterType) {
+            resultsState.filter = filterType;
+            resultsState.currentPage = 1; // 重置到第一页
+            updateResultsDisplay();
+            addLog(`切换结果筛选: ${filterType}`, 'info');
+        }
+
+        function changeResultsPage(newPage) {
+            resultsState.currentPage = newPage;
+            renderPaginatedResults();
+            addLog(`切换到结果第${newPage}页`, 'info');
+        }
+
+        function exportResults() {
+            if (!processResults || processResults.length === 0) {
+                alert('暂无结果可导出');
+                return;
+            }
+
+            const reportData = processResults.map(result => ({
+                文件名: result.filename,
+                处理状态: result.success ? '成功' : '失败',
+                新文件名: result.new_filename || '',
+                识别号码: result.order_number || '',
+                处理消息: result.message,
+                备份路径: result.backup_path || ''
+            }));
+
+            const csvContent = [
+                Object.keys(reportData[0]).join(','),
+                ...reportData.map(row => Object.values(row).map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pdf-renamer-report-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            addLog('处理报告已导出', 'success');
+        }
+
+        // 背景自定义功能
+        function toggleBackgroundCustomizer() {
+            const customizer = document.getElementById('backgroundCustomizer');
+            customizer.classList.toggle('open');
+        }
+
+        function initColorPalette() {
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // 移除其他选项的active类
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    // 添加当前选项的active类
+                    this.classList.add('active');
+                    // 应用主题
+                    const theme = this.dataset.theme;
+                    applyTheme(theme);
+                });
+            });
+        }
+
+        function applyTheme(themeName) {
+            if (backgroundThemes[themeName]) {
+                document.body.style.background = backgroundThemes[themeName];
+                localStorage.setItem('selectedTheme', themeName);
+                localStorage.removeItem('customGradient'); // 清除自定义渐变
+            }
+        }
+
+        function applyCustomGradient() {
+            const color1 = document.getElementById('color1').value;
+            const color2 = document.getElementById('color2').value;
+            const customGradient = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+            document.body.style.background = customGradient;
+            
+            // 保存自定义设置
+            localStorage.setItem('customGradient', customGradient);
+            localStorage.setItem('customColor1', color1);
+            localStorage.setItem('customColor2', color2);
+            localStorage.removeItem('selectedTheme'); // 清除预设主题
+            
+            // 移除所有预设主题的active状态
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+        }
+
+        function resetBackground() {
+            applyTheme('pink');
+            document.querySelector('[data-theme="pink"]').classList.add('active');
+            localStorage.removeItem('customGradient');
+            localStorage.removeItem('customColor1');
+            localStorage.removeItem('customColor2');
+            
+            // 重置颜色选择器
+            document.getElementById('color1').value = '#ff9a9e';
+            document.getElementById('color2').value = '#fecfef';
+        }
+
+
+
+        // 进度条功能
+        function showProgress() {
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+            initCircularProgress(); // 初始化圆形进度条
+        }
+
+        function updateProgress(current, total, fileName = '') {
+            const percent = Math.round((current / total) * 100);
+            const progressText = document.getElementById('progressText');
+            
+            // 更新圆形进度条
+            updateCircularProgress(percent);
+            if (progressText) {
+                progressText.textContent = `正在处理 ${current}/${total} - ${fileName}`;
+            }
+            
+            // 安全更新统计信息
+            const statFiles = document.getElementById('statFiles');
+            if (statFiles) {
+                statFiles.textContent = current;
+            }
+            
+            // 计算处理速度和预计时间
+            if (performanceData.startTime) {
+                const elapsed = (Date.now() - performanceData.startTime) / 1000;
+                const speed = current / elapsed;
+                const remaining = total - current;
+                const eta = remaining > 0 ? Math.ceil(remaining / speed) : 0;
+                
+                const statSpeed = document.getElementById('statSpeed');
+                const statETA = document.getElementById('statETA');
+                
+                if (statSpeed) {
+                    statSpeed.textContent = speed.toFixed(1);
+                }
+                if (statETA) {
+                    statETA.textContent = eta > 0 ? `${eta}s` : '完成';
+                }
+            }
+        }
+
+        function initCircularProgress() {
+            const ring = document.getElementById('progressRing');
+            if (ring) {
+                const circumference = 2 * Math.PI * 60; // r=60
+                ring.style.strokeDasharray = circumference;
+                ring.style.strokeDashoffset = circumference;
+            }
+        }
+
+        function updateCircularProgress(percentage) {
+            const ring = document.getElementById('progressRing');
+            const percentageEl = document.getElementById('progressPercentage');
+            
+            if (ring) {
+                const circumference = 2 * Math.PI * 60;
+                const offset = circumference - (percentage / 100) * circumference;
+                ring.style.strokeDashoffset = offset;
+            }
+            
+            if (percentageEl) {
+                percentageEl.textContent = Math.round(percentage) + '%';
+            }
+        }
+
+        function hideProgress() {
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        // OCR状态指示器控制
+        function showOCRStatus(message = '⚡ 双重验证OCR识别中...') {
+            const indicator = document.getElementById('ocrStatus');
+            if (indicator) {
+                indicator.textContent = message;
+                indicator.style.display = 'block';
+            }
+        }
+
+        function hideOCRStatus() {
+            const indicator = document.getElementById('ocrStatus');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+        }
+
+        function updateOCRStatus(message) {
+            const indicator = document.getElementById('ocrStatus');
+            if (indicator && indicator.style.display === 'block') {
+                indicator.textContent = message;
+            }
+        }
+
+        // 性能监控功能 - 高度优化版
+        let performanceInterval = null;
+        
+        function initPerformanceMonitoring() {
+            // 在极简模式下不启动性能监控
+            if (ecoMode) {
+                return;
+            }
+            
+            // 大幅降低更新频率到10秒，只在需要时运行
+            if ('memory' in performance) {
+                performanceInterval = setInterval(() => {
+                    const indicator = document.getElementById('performanceIndicator');
+                    if (indicator && indicator.style.display === 'block') {
+                        try {
+                            const memoryInfo = performance.memory;
+                            const memoryUsed = Math.round(memoryInfo.usedJSHeapSize / 1024 / 1024);
+                            const memoryElement = document.getElementById('memoryUsage');
+                            if (memoryElement) {
+                                memoryElement.textContent = memoryUsed + 'MB';
+                            }
+                        } catch (e) {
+                            // 忽略错误，避免控制台警告
+                        }
+                    }
+                }, 10000); // 进一步降低到10秒
+            }
+        }
+
+        function stopPerformanceMonitoring() {
+            if (performanceInterval) {
+                clearInterval(performanceInterval);
+                performanceInterval = null;
+            }
+        }
+
+        function showPerformanceInfo() {
+            if (ecoMode) {
+                alert('🌿 极简模式下已禁用性能监控以节省资源');
+                return;
+            }
+            togglePerformancePanel();
+        }
+
+        function updatePerformanceStats() {
+            const processedFiles = document.getElementById('processedFiles');
+            const processingTime = document.getElementById('processingTime');
+            
+            if (processedFiles) {
+                processedFiles.textContent = performanceData.processedFiles;
+            }
+            if (processingTime && performanceData.startTime) {
+                const elapsed = (Date.now() - performanceData.startTime) / 1000;
+                processingTime.textContent = elapsed.toFixed(1);
+            }
+        }
+
+        // 备份模式切换功能
+        function toggleBackupMode() {
+            backupMode = !backupMode;
+            updateBackupButton();
+            
+            // 保存用户偏好
+            localStorage.setItem('backupMode', backupMode);
+            
+            // 显示状态变化提示
+            const status = backupMode ? '开启' : '关闭';
+            const emoji = backupMode ? '✅' : '❌';
+            
+            // 临时显示状态变化
+            const btn = document.getElementById('backupToggleBtn');
+            const originalText = btn.textContent;
+            btn.textContent = `${emoji} 备份已${status}`;
+            
+            setTimeout(() => {
+                updateBackupButton();
+            }, 1500);
+        }
+
+        function updateBackupButton() {
+            const btn = document.getElementById('backupToggleBtn');
+            const status = backupMode ? '开启' : '关闭';
+            const emoji = backupMode ? '💾' : '🚫';
+            
+            btn.textContent = `${emoji} 备份: ${status}`;
+            
+            // 更新按钮样式
+            if (backupMode) {
+                btn.classList.remove('glass-btn-danger');
+                btn.classList.add('glass-btn-success');
+            } else {
+                btn.classList.remove('glass-btn-success');
+                btn.classList.add('glass-btn-danger');
+            }
+        }
+
+        // 初始化备份模式
+        function initBackupMode() {
+            const savedMode = localStorage.getItem('backupMode');
+            if (savedMode !== null) {
+                backupMode = savedMode === 'true';
+            }
+            updateBackupButton();
+        }
+
+        // 初始化性能模式
+        function initPerformanceMode() {
+            const savedEcoMode = localStorage.getItem('ecoMode');
+            if (savedEcoMode !== null) {
+                ecoMode = savedEcoMode === 'true';
+            }
+            updatePerformanceModeUI();
+            
+            if (ecoMode) {
+                // 立即应用极简模式设置
+                document.body.style.setProperty('--animation-duration', '0s');
+                setTimeout(() => {
+                    document.querySelectorAll('*').forEach(el => {
+                        el.style.transition = 'none';
+                        el.style.animation = 'none';
+                    });
+                    
+                    document.querySelectorAll('.glass-card, .glass-btn').forEach(el => {
+                        el.style.backdropFilter = 'blur(5px)';
+                        el.style.webkitBackdropFilter = 'blur(5px)';
+                    });
+                }, 100);
+            }
+        }
+
+        // 性能模式切换功能
+        function togglePerformanceMode() {
+            ecoMode = !ecoMode;
+            updatePerformanceModeUI();
+            
+            if (ecoMode) {
+                applyEcoMode();
+                alert('🚀 已切换到极简性能模式，界面响应更快！');
+            } else {
+                removeEcoMode();
+                alert('✨ 已切换到标准模式，恢复完整视觉效果！');
+            }
+            
+            localStorage.setItem('ecoMode', ecoMode);
+        }
+
+        function updatePerformanceModeUI() {
+            const toggleBtn = document.getElementById('performanceToggle');
+            if (toggleBtn) {
+                toggleBtn.textContent = ecoMode ? '🌿 极简模式' : '🚀 标准模式';
+                toggleBtn.classList.toggle('eco-mode', ecoMode);
+            }
+        }
+
+        // 初始化性能模式
+        function initPerformanceMode() {
+            const savedMode = localStorage.getItem('ecoMode');
+            if (savedMode !== null) {
+                ecoMode = savedMode === 'true';
+            }
+            
+            // 如果是极简模式，立即应用设置
+            if (ecoMode) {
+                applyEcoMode();
+            }
+            
+            updatePerformanceModeUI();
+        }
+
+        // 应用极简模式
+        function applyEcoMode() {
+            // 移除所有动画和过渡效果，简化视觉效果
+            const style = document.createElement('style');
+            style.id = 'eco-mode-style';
+            style.textContent = `
+                *, *::before, *::after {
+                    transition: none !important;
+                    animation: none !important;
+                }
+                .glass-card, .glass-btn, .container, .upload-section {
+                    backdrop-filter: blur(3px) !important;
+                    -webkit-backdrop-filter: blur(3px) !important;
+                    background: rgba(255, 255, 255, 0.08) !important;
+                    box-shadow: 0 2px 8px rgba(255, 182, 193, 0.05) !important;
+                }
+                .glass-card:hover, .glass-btn:hover, .feature:hover, .upload-area:hover {
+                    transform: none !important;
+                }
+                .result-log {
+                    max-height: 100px !important;
+                }
+                .performance-indicator {
+                    display: none !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 移除极简模式样式
+        function removeEcoMode() {
+            const ecoStyle = document.getElementById('eco-mode-style');
+            if (ecoStyle) {
+                ecoStyle.remove();
+            }
+        }
+
+        // 显示性能优化建议
+        function showPerformanceTips() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                background: rgba(0,0,0,0.5); z-index: 10000; 
+                display: flex; align-items: center; justify-content: center;
+            `;
+            modal.innerHTML = `
+                <div class="glass-card" style="max-width: 500px; margin: 20px; padding: 30px;">
+                    <h3 style="margin-bottom: 20px; text-align: center; color: #444;">💡 性能优化建议</h3>
+                    <div style="margin-bottom: 20px; color: #444;">
+                        <h4 style="margin-bottom: 10px;">🚀 如果觉得界面卡顿，建议：</h4>
+                        <ul style="padding-left: 20px; line-height: 1.6;">
+                            <li>点击左下角"${ecoMode ? '🌿 极简模式' : '🚀 标准模式'}"切换到极简模式</li>
+                            <li>关闭其他浏览器标签页和程序</li>
+                            <li>每次处理文件数量控制在10个以内</li>
+                            <li>处理大文件时耐心等待，避免重复点击</li>
+                        </ul>
+                        <h4 style="margin: 15px 0 10px;">⚡ 极简模式特点：</h4>
+                        <ul style="padding-left: 20px; line-height: 1.6;">
+                            <li>移除所有动画效果，界面响应更快</li>
+                            <li>降低视觉效果强度，减少GPU负担</li>
+                            <li>优化处理批次，减少内存占用</li>
+                            <li>自动禁用性能监控，节省资源</li>
+                        </ul>
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="glass-btn glass-btn-primary" onclick="togglePerformanceMode(); this.closest('.modal').remove();" style="margin-right: 10px;">
+                            ${ecoMode ? '✨ 切换到标准模式' : '🌿 切换到极简模式'}
+                        </button>
+                        <button class="glass-btn glass-btn-danger" onclick="this.closest('.modal').remove()">
+                            ❌ 关闭
+                        </button>
+                    </div>
+                </div>
+            `;
+            modal.className = 'modal';
+            document.body.appendChild(modal);
+        }
+
+        // 调试下载系统
+        async function debugDownloadSystem() {
+            try {
+                // 获取详细调试信息
+                const [listResponse, debugResponse] = await Promise.all([
+                    fetch('/download-list'),
+                    fetch('/debug-downloads')
+                ]);
+                
+                const listData = await listResponse.json();
+                const debugData = await debugResponse.json();
+                
+                const debugInfo = `
+🔧 下载系统详细调试报告
+================================
+
+📂 系统信息:
+├─ 下载目录: ${debugData.downloads_dir || 'unknown'}
+├─ 目录存在: ${debugData.dir_exists ? '✅ 是' : '❌ 否'}  
+├─ 是否为目录: ${debugData.is_directory ? '✅ 是' : '❌ 否'}
+├─ 目录权限: ${debugData.permissions || 'N/A'}
+└─ 总大小: ${debugData.total_size ? (debugData.total_size / 1024 / 1024).toFixed(2) + 'MB' : '0MB'}
+
+📊 文件统计:
+├─ API返回文件数: ${listData.files ? listData.files.length : 0}
+├─ 实际PDF文件数: ${debugData.total_files || 0}
+├─ 目录所有文件数: ${debugData.all_files ? debugData.all_files.length : 0}
+└─ 状态消息: ${listData.message || 'none'}
+
+📋 详细文件列表:
+API返回的文件:
+${listData.files && listData.files.length > 0 ? 
+    listData.files.map((file, index) => `  ${index + 1}. ${file}`).join('\n') : 
+    '  (无文件)'}
+
+实际目录中的PDF文件:
+${debugData.pdf_files && debugData.pdf_files.length > 0 ? 
+    debugData.pdf_files.map((file, index) => {
+        const sizeInfo = debugData.file_sizes && debugData.file_sizes[file] ? 
+            ` (${debugData.file_sizes[file].size_mb}MB)` : '';
+        return `  ${index + 1}. ${file}${sizeInfo}`;
+    }).join('\n') : 
+    '  (无PDF文件)'}
+
+目录中的所有文件:
+${debugData.all_files && debugData.all_files.length > 0 ? 
+    debugData.all_files.map((file, index) => `  ${index + 1}. ${file}`).join('\n') : 
+    '  (目录为空)'}
+
+🛠️ 问题诊断:
+${!debugData.dir_exists ? '❌ 下载目录不存在 - 需要先处理文件创建目录\n' : ''}
+${debugData.dir_exists && !debugData.is_directory ? '❌ downloads路径存在但不是目录\n' : ''}
+${debugData.total_files === 0 ? '⚠️  没有PDF文件 - 请先上传并处理文件\n' : ''}
+${debugData.total_files !== (listData.files ? listData.files.length : 0) ? '⚠️  API返回的文件数与实际不符\n' : ''}
+${debugData.total_files === 1 ? '⚠️  只有1个文件 - 这可能是问题所在\n' : ''}
+${debugData.error || listData.error ? `❌ 系统错误: ${debugData.error || listData.error}\n` : ''}
+${debugData.permissions === '000' ? '❌ 目录权限问题\n' : ''}
+
+💡 建议解决方案:
+${debugData.total_files === 0 ? '1. 上传PDF文件并点击"识别并处理文件"\n' : ''}
+${debugData.total_files === 1 ? '2. 检查是否有多个文件被重命名为同一个名称\n' : ''}
+${debugData.total_files !== (listData.files ? listData.files.length : 0) ? '3. 刷新页面或重启服务\n' : ''}
+`;
+
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                    background: rgba(0,0,0,0.5); z-index: 10000; 
+                    display: flex; align-items: center; justify-content: center;
+                `;
+                modal.innerHTML = `
+                    <div class="glass-card" style="max-width: 600px; max-height: 80vh; overflow-y: auto; margin: 20px; padding: 30px;">
+                        <h3 style="margin-bottom: 20px; text-align: center; color: #444;">🔧 下载系统调试</h3>
+                        <pre style="
+                            background: rgba(0,0,0,0.1); 
+                            padding: 15px; 
+                            border-radius: 8px; 
+                            font-family: monospace; 
+                            font-size: 0.9rem; 
+                            white-space: pre-wrap; 
+                            margin-bottom: 20px;
+                            color: #333;
+                            max-height: 400px;
+                            overflow-y: auto;
+                        ">${debugInfo}</pre>
+                        <div style="text-align: center;">
+                            <button class="glass-btn glass-btn-primary" onclick="location.reload()" style="margin-right: 10px;">
+                                🔄 刷新页面
+                            </button>
+                            <button class="glass-btn glass-btn-danger" onclick="this.closest('.modal').remove()">
+                                ❌ 关闭
+                            </button>
+                        </div>
+                    </div>
+                `;
+                modal.className = 'modal';
+                document.body.appendChild(modal);
+                
+            } catch (error) {
+                alert('调试失败: ' + error.message);
+            }
+        }
+
+        // 自动修复uploads中遗留的文件
+        async function autoFixUploads() {
+            try {
+                addLog('🔧 开始自动修复uploads中的遗留文件...', 'info');
+                
+                const response = await fetch('/auto-fix', {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                console.log('自动修复结果:', data);
+                
+                let message = data.message;
+                if (data.details && data.details.length > 0) {
+                    message += '\n\n详细信息:\n';
+                    data.details.forEach(detail => {
+                        if (detail.success) {
+                            message += `✅ ${detail.original} → ${detail.moved_to}\n`;
+                        } else {
+                            message += `ℹ️ ${detail.original}: ${detail.reason}\n`;
+                        }
+                    });
+                }
+                
+                alert(message);
+                addLog(`自动修复完成: 移动了 ${data.fixed_count} 个文件`, 'success');
+                
+                // 刷新下载列表
+                if (data.fixed_count > 0) {
+                    await refreshDownloadList();
+                }
+                
+            } catch (error) {
+                console.error('自动修复失败:', error);
+                addLog(`自动修复失败: ${error.message}`, 'error');
+                alert('自动修复失败: ' + error.message);
+            }
+        }
+
+        // 刷新下载列表的辅助函数
+        async function refreshDownloadList() {
+            try {
+                const response = await fetch('/download-list');
+                const data = await response.json();
+                console.log('刷新下载列表:', data);
+                addLog(`下载列表已刷新: 找到 ${data.count} 个文件`, 'info');
+            } catch (error) {
+                console.error('刷新下载列表失败:', error);
+            }
+        }
+
+        // 切换处理结果详细信息的显示
+        function toggleResultDetails(index) {
+            const details = document.getElementById(`details-${index}`);
+            const icon = document.getElementById(`expand-icon-${index}`);
+            
+            if (!details || !icon) return;
+            
+            const isHidden = details.style.display === 'none';
+            
+            if (isHidden) {
+                // 展开
+                details.style.display = 'block';
+                icon.style.transform = 'rotate(180deg)';
+                icon.textContent = '▲';
+                
+                // 平滑展开动画
+                details.style.opacity = '0';
+                details.style.maxHeight = '0';
+                details.style.overflow = 'hidden';
+                details.style.transition = 'all 0.3s ease';
+                
+                // 触发动画
+                setTimeout(() => {
+                    details.style.opacity = '1';
+                    details.style.maxHeight = '1000px';
+                }, 10);
+                
+                addLog(`展开文件详情: 索引${index}`, 'info');
+            } else {
+                // 折叠
+                details.style.opacity = '0';
+                details.style.maxHeight = '0';
+                icon.style.transform = 'rotate(0deg)';
+                icon.textContent = '▼';
+                
+                // 动画结束后隐藏
+                setTimeout(() => {
+                    details.style.display = 'none';
+                    details.style.transition = '';
+                    details.style.overflow = '';
+                }, 300);
+                
+                addLog(`折叠文件详情: 索引${index}`, 'info');
+            }
+        }
+
+        // 批量展开/折叠所有结果
+        function toggleAllResults(expand = null) {
+            const allResults = document.querySelectorAll('.result-item');
+            let expandedCount = 0;
+            let collapsedCount = 0;
+            
+            allResults.forEach((item, index) => {
+                const details = document.getElementById(`details-${index}`);
+                const icon = document.getElementById(`expand-icon-${index}`);
+                
+                if (!details || !icon) return;
+                
+                const isCurrentlyHidden = details.style.display === 'none';
+                const shouldExpand = expand !== null ? expand : isCurrentlyHidden;
+                
+                if (shouldExpand && isCurrentlyHidden) {
+                    toggleResultDetails(index);
+                    expandedCount++;
+                } else if (!shouldExpand && !isCurrentlyHidden) {
+                    toggleResultDetails(index);
+                    collapsedCount++;
+                }
+            });
+            
+            if (expandedCount > 0) {
+                addLog(`批量展开了 ${expandedCount} 个结果详情`, 'info');
+            }
+            if (collapsedCount > 0) {
+                addLog(`批量折叠了 ${collapsedCount} 个结果详情`, 'info');
+            }
+        }
+
+        // 批量重命名功能
+        async function batchRename() {
+            if (selectedFiles.length === 0) {
+                alert('请先选择PDF文件！');
+                return;
+            }
+
+            if (confirm(`确定要批量处理 ${selectedFiles.length} 个文件吗？处理完成后可以选择下载重命名后的文件。`)) {
+                await processFiles();
+            }
+        }
+
+        // 修改后的文件处理功能 - 改为下载模式
+        async function processFiles() {
+            if (selectedFiles.length === 0) {
+                alert('请先选择PDF文件！');
+                return;
+            }
+
+            if (isProcessing) {
+                alert('正在处理中，请稍候...');
+                return;
+            }
+
+            isProcessing = true;
+            performanceData.startTime = Date.now();
+            performanceData.processedFiles = 0;
+
+            const resultsSection = document.getElementById('resultsSection');
+            const results = document.getElementById('results');
+            const backupInfo = document.getElementById('backupInfo');
+
+            showProgress();
+            showOCRStatus('⚡ 启动双重验证OCR引擎...');
+            resultsSection.style.display = 'none';
+
+            try {
+                // 智能批量处理 - 优化大批量文件成功率
+                const batchSize = (() => {
+                    if (ecoMode) return 1; // 极简模式单个处理
+                    if (selectedFiles.length > 50) return 1; // 大批量：单个处理
+                    if (selectedFiles.length > 20) return 2; // 中批量：每次2个
+                    if (selectedFiles.length > 10) return 3; // 小批量：每次3个
+                    return 5; // 极少量：最大并发
+                })();
+                
+                // 根据文件数量和批次大小动态调整延迟
+                const batchDelay = (() => {
+                    if (ecoMode) return 1500; // 极简模式延迟更长
+                    if (selectedFiles.length > 50) return 1500; // 大批量：长延迟确保稳定
+                    if (selectedFiles.length > 20) return 1200; // 中批量：中等延迟
+                    if (selectedFiles.length > 10) return 800; // 小批量：短延迟
+                    return 500; // 极少量：适当延迟
+                })();
+                
+                const totalFiles = selectedFiles.length;
+                let allResults = [];
+                let totalSuccessCount = 0;
+                
+                addLog(`🚀 智能批量处理开始: ${totalFiles}个文件, 批次大小=${batchSize}, 延迟=${batchDelay}ms`, 'info');
+
+                for (let i = 0; i < totalFiles; i += batchSize) {
+                    const batch = selectedFiles.slice(i, i + batchSize);
+                    const batchNumber = Math.floor(i/batchSize) + 1;
+                    const totalBatches = Math.ceil(totalFiles/batchSize);
+                    
+                    // 批次重试机制
+                    let batchSuccess = false;
+                    let retryCount = 0;
+                    const maxRetries = 3; // 增加重试次数
+                    
+                    while (!batchSuccess && retryCount <= maxRetries) {
+                        try {
+                            const formData = new FormData();
+                            
+                            batch.forEach(file => {
+                                formData.append('files', file);
+                            });
+
+                            formData.append('enableBackup', 'true');
+
+                            const retryText = retryCount > 0 ? ` (重试${retryCount}/${maxRetries})` : '';
+                            updateProgress(i, totalFiles, `批次 ${batchNumber}/${totalBatches}${retryText}`);
+                            updateOCRStatus(`⚡ 双引擎识别批次 ${batchNumber}/${totalBatches}${retryText}...`);
+                            
+                            addLog(`📦 处理批次 ${batchNumber}/${totalBatches}${retryText}, 包含 ${batch.length} 个文件`, 'info');
+
+                            // 增加超时时间，适应OCR处理
+                            const timeoutMs = batch.length * 90000; // 每个文件1.5分钟
+                            const controller = new AbortController();
+                            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+                            const response = await fetch('/upload', {
+                                method: 'POST',
+                                body: formData,
+                                signal: controller.signal
+                            });
+
+                            clearTimeout(timeoutId);
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+
+                            const batchData = await response.json();
+                            
+                            // 验证响应数据
+                            if (!batchData.results || !Array.isArray(batchData.results)) {
+                                throw new Error('服务器返回数据格式错误');
+                            }
+                            
+                            allResults = allResults.concat(batchData.results);
+                            batchSuccess = true;
+                            
+                            const successCount = batchData.results.filter(r => r.success).length;
+                            totalSuccessCount += successCount;
+                            
+                            addLog(`✅ 批次 ${batchNumber} 完成: ${successCount}/${batch.length} 个文件成功 (总计: ${totalSuccessCount}/${i + batch.length})`, 'success');
+                            
+                            performanceData.processedFiles += batch.length;
+                            updatePerformanceStats();
+
+                        } catch (error) {
+                            retryCount++;
+                            const isTimeout = error.name === 'AbortError';
+                            const errorType = isTimeout ? '超时' : '错误';
+                            const errorMsg = `❌ 批次 ${batchNumber} ${errorType} (尝试${retryCount}/${maxRetries+1}): ${error.message}`;
+                            addLog(errorMsg, 'error');
+                            
+                            if (retryCount <= maxRetries) {
+                                const retryDelay = batchDelay * (retryCount + 1); // 递增延迟
+                                addLog(`⏳ 等待 ${retryDelay}ms 后重试...`, 'warning');
+                                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                            } else {
+                                // 最终失败，记录并继续
+                                addLog(`💥 批次 ${batchNumber} 最终失败，跳过继续处理`, 'error');
+                                
+                                // 为失败的文件创建错误结果
+                                const failedResults = batch.map(file => ({
+                                    filename: file.name,
+                                    success: false,
+                                    message: `❌ 批次处理失败: ${errorType} - ${error.message}`,
+                                    log: `网络或服务器错误: ${error.message}`
+                                }));
+                                allResults = allResults.concat(failedResults);
+                                batchSuccess = true; // 跳出重试循环
+                            }
+                        }
+                    }
+
+                    // 强制内存清理
+                    if ('gc' in window) {
+                        try {
+                            window.gc();
+                        } catch (e) {
+                            // 忽略GC错误
+                        }
+                    }
+
+                    // 批次间智能延迟
+                    if (i + batchSize < totalFiles) {
+                        addLog(`😴 批次间延迟 ${batchDelay}ms...`, 'info');
+                        await new Promise(resolve => setTimeout(resolve, batchDelay));
+                    }
+                }
+                
+                addLog(`🎉 批量处理完成! 总成功: ${totalSuccessCount}/${totalFiles} 个文件`, totalSuccessCount > 0 ? 'success' : 'warning');
+
+                updateProgress(totalFiles, totalFiles, '处理完成');
+
+                // 模拟最终数据结构
+                const data = {
+                    results: allResults,
+                    processed_count: allResults.filter(r => r.success).length,
+                    total_count: totalFiles,
+                    backup_info: allResults.length > 0 ? `文件已处理，可选择下载重命名后的PDF文件` : null
+                };
+                
+                hideProgress();
+                hideOCRStatus();
+                resultsSection.style.display = 'block';
+
+                // 优化结果显示管理
+                processResults = data.results; // 保存所有结果到全局变量
+                updateResultsDisplay();
+
+                // 显示批量下载选项
+                if (data.processed_count > 0) {
+                    backupInfo.style.display = 'block';
+                    backupInfo.innerHTML = `
+                        <h4 style="margin-bottom: 15px;">📥 下载选项</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                            <button class="glass-btn glass-btn-primary" onclick="downloadAllFiles()" style="width: 100%;">
+                                📦 批量下载 (ZIP压缩包)
+                            </button>
+                            <button class="glass-btn glass-btn-success" onclick="showSelectiveDownload()" style="width: 100%;">
+                                ✅ 选择性下载
+                            </button>
+                            <button class="glass-btn" onclick="showAvailableFiles()" style="width: 100%;">
+                                📋 查看所有文件
+                            </button>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                            <button class="glass-btn" onclick="resultsState.allExpanded = true; updateResultsDisplay();" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); flex: 1; min-width: 120px;">
+                                📖 展开所有详情
+                            </button>
+                            <button class="glass-btn" onclick="resultsState.allExpanded = false; updateResultsDisplay();" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); flex: 1; min-width: 120px;">
+                                📋 折叠所有详情
+                            </button>
+                            <button class="glass-btn" onclick="autoFixDownloads();" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); flex: 1; min-width: 120px;">
+                                🔧 修复下载问题
+                            </button>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                            <p style="color: rgba(68,68,68,0.8); margin: 0; margin-bottom: 8px;">✅ 成功处理: ${data.processed_count}/${data.total_count} 个文件</p>
+                            <p style="color: rgba(68,68,68,0.8); margin: 0; margin-bottom: 8px;">⏱️ 处理时间: ${((Date.now() - performanceData.startTime) / 1000).toFixed(1)}秒</p>
+                            <p style="color: rgba(68,68,68,0.7); font-size: 0.9rem; margin: 0;">
+                                💡 提示：点击文件条目可展开查看详细OCR日志和备份信息
+                            </p>
+                        </div>
+                        
+                        <p style="color: rgba(68,68,68,0.7); font-size: 0.9rem; text-align: center; font-style: italic;">
+                            📁 文件已安全保存，原文件已自动备份，可随时下载
+                        </p>
+                        <p style="color: rgba(68,68,68,0.7); font-size: 0.9rem; text-align: center; font-style: italic;">
+                            ⚠️ 如果下载时提示"文件不存在"，请点击"修复下载问题"按钮
+                        </p>
+                    `;
+                }
+
+                // 重置文件选择
+                selectedFiles = [];
+                document.getElementById('fileInput').value = '';
+                updateFileList();
+
+            } catch (error) {
+                hideProgress();
+                hideOCRStatus();
+                alert('处理失败: ' + error.message);
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // 新增：下载功能
+        async function downloadSingleFile(filename) {
+            try {
+                // 额外日志以辅助调试
+                console.log(`准备下载文件: ${filename}`);
+                addLog(`🔍 开始下载文件: ${filename}`, 'info');
+                
+                // 确保正确编码文件名中的特殊字符
+                const encodedFilename = encodeURIComponent(filename);
+                console.log(`尝试下载文件: ${filename} (编码后: ${encodedFilename})`);
+                
+                const response = await fetch(`/download/${encodedFilename}`);
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    addLog(`✅ 文件 ${filename} 下载成功`, 'success');
+                } else {
+                    // 记录详细错误信息
+                    let errorDetail = '';
+                    try {
+                        const errorJson = await response.json();
+                        errorDetail = errorJson.detail || response.statusText;
+                    } catch (e) {
+                        errorDetail = response.statusText;
+                    }
+                    
+                    console.error(`下载失败 ${filename}: ${response.status} - ${errorDetail}`);
+                    addLog(`❌ 文件 ${filename} 下载失败: ${errorDetail}`, 'error');
+                    
+                    // 下载失败时提示自动修复
+                    if (confirm(`下载失败：${errorDetail}\n\n文件名: ${filename}\n\n是否尝试自动修复？`)) {
+                        await autoFixDownloads();
+                        // 刷新文件列表
+                        await refreshDownloadList();
+                        // 修复后再次尝试下载
+                        setTimeout(() => downloadSingleFile(filename), 1000);
+                    } else {
+                        alert(`下载失败：${errorDetail}\n\n您可以点击"修复下载"按钮尝试修复，或检查文件名称是否匹配。`);
+                    }
+                }
+            } catch (error) {
+                console.error(`下载过程中出错: ${error.message}`);
+                addLog(`❌ 下载过程中出错: ${error.message}`, 'error');
+                alert('下载失败: ' + error.message);
+            }
+        }
+
+        async function downloadAllFiles() {
+            try {
+                const response = await fetch('/download-all', { method: 'POST' });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'renamed_pdfs.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    const errorData = await response.json();
+                    alert('批量下载失败: ' + errorData.detail);
+                }
+            } catch (error) {
+                alert('批量下载失败: ' + error.message);
+            }
+        }
+
+        async function showAvailableFiles() {
+            try {
+                const response = await fetch('/download-list');
+                const data = await response.json();
+                
+                // 调试信息：显示完整的响应数据
+                console.log('📋 下载列表调试信息:', data);
+                console.log('📄 文件数量:', data.files ? data.files.length : 0);
+                console.log('📄 文件列表:', data.files);
+                
+                if (data.files && data.files.length > 0) {
+                    const fileList = data.files.map(file => 
+                        `<div class="file-item" style="margin-bottom: 10px;">
+                            <span>📄 ${file}</span>
+                            <button class="glass-btn" onclick="downloadSingleFile('${file}')" style="margin-left: 10px;">
+                                💾 下载
+                            </button>
+                        </div>`
+                    ).join('');
+                    
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                        background: rgba(0,0,0,0.5); z-index: 10000; 
+                        display: flex; align-items: center; justify-content: center;
+                    `;
+                    modal.innerHTML = `
+                        <div class="glass-card" style="max-width: 600px; max-height: 70vh; overflow-y: auto; margin: 20px; padding: 30px;">
+                            <h3 style="margin-bottom: 20px; text-align: center; color: #444;">📋 可下载文件列表 (${data.files.length}个)</h3>
+                            <div style="margin-bottom: 15px; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; font-size: 0.9rem;">
+                                <strong>调试信息:</strong><br>
+                                目录: ${data.downloads_dir || 'unknown'}<br>
+                                目录存在: ${data.dir_exists ? '是' : '否'}<br>
+                                消息: ${data.message || 'none'}
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                ${fileList}
+                            </div>
+                            <div style="text-align: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                                <button class="glass-btn glass-btn-primary" onclick="autoFixDownloads()" style="flex: 1;">
+                                    🔧 修复下载
+                                </button>
+                                <button class="glass-btn glass-btn-danger" onclick="this.closest('.modal').remove()" style="flex: 1;">
+                                    ❌ 关闭
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    modal.className = 'modal';
+                    document.body.appendChild(modal);
+                } else {
+                    if (confirm('暂无可下载的文件。是否尝试自动修复？')) {
+                        await autoFixDownloads();
+                    } else {
+                        alert(`暂无可下载的文件\n\n调试信息:\n目录: ${data.downloads_dir || 'unknown'}\n目录存在: ${data.dir_exists ? '是' : '否'}\n消息: ${data.message || 'none'}\n错误: ${data.error || 'none'}`);
+                    }
+                }
+            } catch (error) {
+                console.error('获取文件列表错误:', error);
+                alert('获取文件列表失败: ' + error.message);
+            }
+        }
+
+        async function showSelectiveDownload() {
+            try {
+                const response = await fetch('/download-list');
+                const data = await response.json();
+                
+                // 调试信息
+                console.log('✅ 选择性下载调试信息:', data);
+                
+                if (data.files && data.files.length > 0) {
+                    const fileCheckboxes = data.files.map(file => 
+                        `<div style="margin-bottom: 10px;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" value="${file}" style="margin-right: 10px;">
+                                <span>📄 ${file}</span>
+                            </label>
+                        </div>`
+                    ).join('');
+                    
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                        background: rgba(0,0,0,0.5); z-index: 10000; 
+                        display: flex; align-items: center; justify-content: center;
+                    `;
+                    modal.innerHTML = `
+                        <div class="glass-card" style="max-width: 600px; max-height: 70vh; overflow-y: auto; margin: 20px; padding: 30px;">
+                            <h3 style="margin-bottom: 20px; text-align: center; color: #444;">✅ 选择要下载的文件</h3>
+                            <div style="margin-bottom: 20px;">
+                                <div style="margin-bottom: 15px;">
+                                    <button class="glass-btn" onclick="toggleAllCheckboxes(true)" style="margin-right: 10px;">全选</button>
+                                    <button class="glass-btn" onclick="toggleAllCheckboxes(false)">取消全选</button>
+                                </div>
+                                <div id="selectiveFileList">
+                                    ${fileCheckboxes}
+                                </div>
+                            </div>
+                            <div style="text-align: center;">
+                                <button class="glass-btn glass-btn-primary" onclick="downloadSelectedFiles()" style="margin-right: 10px;">
+                                    📦 下载选中文件
+                                </button>
+                                <button class="glass-btn glass-btn-danger" onclick="this.closest('.modal').remove()">
+                                    ❌ 关闭
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    modal.className = 'modal';
+                    document.body.appendChild(modal);
+                } else {
+                    alert('暂无可下载的文件');
+                }
+            } catch (error) {
+                alert('获取文件列表失败: ' + error.message);
+            }
+        }
+
+        function toggleAllCheckboxes(checked) {
+            const checkboxes = document.querySelectorAll('#selectiveFileList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = checked);
+        }
+
+        async function downloadSelectedFiles() {
+            const checkboxes = document.querySelectorAll('#selectiveFileList input[type="checkbox"]:checked');
+            const selectedFiles = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (selectedFiles.length === 0) {
+                alert('请至少选择一个文件');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/download-selected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(selectedFiles)
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'selected_pdfs.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    // 关闭模态框
+                    document.querySelector('.modal').remove();
+                } else {
+                    const errorData = await response.json();
+                    alert('下载失败: ' + errorData.detail);
+                }
+            } catch (error) {
+                alert('下载失败: ' + error.message);
+            }
+        }
+
+        async function clearFiles() {
+            try {
+                const response = await fetch('/clear', { method: 'POST' });
+                const data = await response.json();
+                
+                // 重置界面
+                selectedFiles = [];
+                document.getElementById('fileInput').value = '';
+                updateFileList();
+                document.getElementById('resultsSection').style.display = 'none';
+                
+                alert(data.message);
+            } catch (error) {
+                alert('清理失败: ' + error.message);
+            }
+        }
+
+        async function showBackupInfo() {
+            try {
+                const response = await fetch('/backup-info');
+                const data = await response.json();
+                
+                const backupSection = document.getElementById('backupSection');
+                const backupDetails = document.getElementById('backupDetails');
+                
+                if (data.backup_folders.length > 0) {
+                    backupDetails.innerHTML = data.backup_folders.map(folder => 
+                        `<div class="glass-card" style="margin-bottom: 15px; padding: 20px;">
+                            <h4 style="color: #444; margin-bottom: 10px;">📅 ${folder.date}</h4>
+                            <p style="color: rgba(68,68,68,0.8); margin-bottom: 10px;">文件数量: ${folder.file_count}</p>
+                            <div style="max-height: 150px; overflow-y: auto;">
+                                ${folder.files.map(file => 
+                                    `<div style="padding: 5px 0; color: rgba(68,68,68,0.7);">📄 ${file}</div>`
+                                ).join('')}
+                            </div>
+                            <button class="glass-btn glass-btn-danger" onclick="clearBackupByDate('${folder.date}')" style="margin-top: 10px;">
+                                🗑️ 清理${folder.date}备份
+                            </button>
+                        </div>`
+                    ).join('');
+                } else {
+                    backupDetails.innerHTML = '<p style="text-align: center; color: rgba(68,68,68,0.7);">暂无备份文件</p>';
+                }
+                
+                backupSection.style.display = 'block';
+                backupSection.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                alert('获取备份信息失败: ' + error.message);
+            }
+        }
+
+        async function clearBackupByDate(date) {
+            if (!confirm(`确定要清理 ${date} 的备份文件吗？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/clear-backup?date=${date}`, { method: 'POST' });
+                const data = await response.json();
+                alert(data.message);
+                showBackupInfo(); // 刷新备份信息
+            } catch (error) {
+                alert('清理备份失败: ' + error.message);
+            }
+        }
+
+        async function clearAllBackups() {
+            if (!confirm('确定要清理所有备份文件吗？此操作不可撤销！')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/clear-backup', { method: 'POST' });
+                const data = await response.json();
+                alert(data.message);
+                showBackupInfo(); // 刷新备份信息
+            } catch (error) {
+                alert('清理所有备份失败: ' + error.message);
+            }
+        }
+        // ============ 实时日志系统 ============
+        function addLog(message, level = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = { timestamp, message, level };
+            logEntries.push(logEntry);
+            
+            // 限制日志条目数量，避免内存泄漏
+            if (logEntries.length > 100) {
+                logEntries.shift();
+            }
+            
+            // 更新日志显示
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logContent = document.getElementById('logContent');
+            if (!logContent) return;
+            
+            const lastEntries = logEntries.slice(-20); // 只显示最近20条
+            logContent.innerHTML = lastEntries.map(entry => 
+                `<div class="log-entry">
+                    <span class="log-timestamp">${entry.timestamp}</span>
+                    <span class="log-level-${entry.level}">${entry.message}</span>
+                </div>`
+            ).join('');
+            
+            // 自动滚动到底部
+            try {
+                logContent.scrollTop = logContent.scrollHeight;
+            } catch (e) {
+                // 忽略滚动错误
+            }
+        }
+
+        function toggleLogVisibility() {
+            logVisible = !logVisible;
+            const logWindow = document.getElementById('realtimeLog');
+            const toggleBtn = document.querySelector('.log-toggle');
+            
+            if (logWindow) {
+                if (logVisible) {
+                    logWindow.style.display = 'block';
+                    if (toggleBtn) toggleBtn.textContent = '📋 隐藏日志';
+                    addLog('实时日志窗口已开启', 'info');
+                } else {
+                    logWindow.style.display = 'none';
+                    if (toggleBtn) toggleBtn.textContent = '📋 实时日志';
+                }
+            }
+        }
+
+        function clearLogs() {
+            logEntries = [];
+            updateLogDisplay();
+            addLog('日志已清空', 'info');
+        }
+
+        function exportLogs() {
+            const logText = logEntries.map(entry => 
+                `[${entry.timestamp}] ${entry.level.toUpperCase()}: ${entry.message}`
+            ).join('\n');
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pdf-renamer-logs-${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addLog('日志已导出', 'success');
+        }
+
+        // ============ 增强性能监控系统 ============
+        function initEnhancedPerformanceMonitoring() {
+            if (ecoMode) return;
+            
+            // 启动性能数据收集
+            setInterval(() => {
+                const panel = document.getElementById('performancePanel');
+                if (panel && panel.style.display === 'block') {
+                    updatePerformanceMetrics();
+                }
+            }, 2000);
+        }
+
+        function updatePerformanceMetrics() {
+            try {
+                // CPU使用率（近似）
+                const start = performance.now();
+                for (let i = 0; i < 10000; i++) Math.random();
+                const cpuTime = performance.now() - start;
+                const cpuUsage = Math.min(100, Math.max(0, (cpuTime - 1) * 10));
+                
+                // 内存使用
+                const memoryInfo = performance.memory || {};
+                const memoryUsed = Math.round((memoryInfo.usedJSHeapSize || 0) / 1024 / 1024);
+                
+                // 安全更新界面元素
+                const perfCPU = document.getElementById('perfCPU');
+                const perfMemory = document.getElementById('perfMemory');
+                const perfTime = document.getElementById('perfTime');
+                const perfFiles = document.getElementById('perfFiles');
+                
+                if (perfCPU) {
+                    perfCPU.textContent = `${cpuUsage.toFixed(0)}%`;
+                }
+                if (perfMemory) {
+                    perfMemory.textContent = `${memoryUsed}MB`;
+                }
+                if (perfTime && performanceData.startTime) {
+                    const elapsed = (Date.now() - performanceData.startTime) / 1000;
+                    perfTime.textContent = `${elapsed.toFixed(0)}s`;
+                }
+                if (perfFiles) {
+                    perfFiles.textContent = performanceData.processedFiles;
+                }
+                
+                // 更新性能图表
+                updatePerformanceChart(cpuUsage);
+                
+            } catch (e) {
+                // 忽略错误
+            }
+        }
+
+        function updatePerformanceChart(value) {
+            performanceChart.data.push(value);
+            if (performanceChart.data.length > performanceChart.maxPoints) {
+                performanceChart.data.shift();
+            }
+            
+            const chartContainer = document.getElementById('perfChart');
+            if (!chartContainer) return;
+            
+            chartContainer.innerHTML = '';
+            const maxValue = Math.max(...performanceChart.data, 1);
+            
+            performanceChart.data.forEach((val, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.left = `${index * 6}px`;
+                bar.style.height = `${(val / maxValue) * 50}px`;
+                chartContainer.appendChild(bar);
+            });
+        }
+
+        function togglePerformancePanel() {
+            const panel = document.getElementById('performancePanel');
+            if (!panel) return;
+            
+            const isVisible = panel.style.display === 'block';
+            
+            if (isVisible) {
+                panel.style.display = 'none';
+                addLog('性能监控面板已关闭', 'info');
+            } else {
+                panel.style.display = 'block';
+                addLog('性能监控面板已开启', 'info');
+                updatePerformanceMetrics();
+            }
+        }
+
+        // ============ 增强的性能监控函数 ============
+        function showPerformanceInfo() {
+            togglePerformancePanel();
+        }
+
+        // ============ 重写文件处理函数增加日志 ============
+        const originalProcessFiles = processFiles;
+        processFiles = async function() {
+            addLog(`开始处理 ${selectedFiles.length} 个PDF文件`, 'info');
+            addLog('双重验证OCR引擎启动中...', 'info');
+            
+            try {
+                await originalProcessFiles.call(this);
+                addLog('文件处理完成，可下载重命名后的文件', 'success');
+            } catch (error) {
+                addLog(`处理失败: ${error.message}`, 'error');
+            }
+        };
+
+        // 添加自动修复下载文件功能
+        async function autoFixDownloads() {
+            try {
+                addLog('🔧 启动自动修复...', 'info');
+                
+                // 显示进度提示
+                const loadingModal = document.createElement('div');
+                loadingModal.style.cssText = `
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                    background: rgba(0,0,0,0.5); z-index: 10001; 
+                    display: flex; align-items: center; justify-content: center;
+                `;
+                loadingModal.innerHTML = `
+                    <div class="glass-card" style="padding: 30px; text-align: center;">
+                        <h4 style="margin-bottom: 20px; color: #444;">🔄 正在修复下载...</h4>
+                        <div style="display: inline-block; width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #ff6b9d; animation: spin 1s linear infinite;"></div>
+                        <p style="margin-top: 20px; color: #666;">正在从备份恢复文件，请稍候...</p>
+                    </div>
+                    <style>
+                        @keyframes spin {
+                            to { transform: rotate(360deg); }
+                        }
+                    </style>
+                `;
+                loadingModal.className = 'loading-modal';
+                document.body.appendChild(loadingModal);
+                
+                const response = await fetch('/auto-fix', {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // 关闭加载提示
+                document.querySelector('.loading-modal').remove();
+                
+                // 显示详细结果
+                const resultModal = document.createElement('div');
+                resultModal.style.cssText = `
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                    background: rgba(0,0,0,0.5); z-index: 10000; 
+                    display: flex; align-items: center; justify-content: center;
+                `;
+                
+                let detailsHtml = '';
+                if (data.details && data.details.length > 0) {
+                    const successItems = data.details.filter(d => d.success).slice(0, 10); // 限制显示数量
+                    if (successItems.length > 0) {
+                        detailsHtml += `<div style="margin-top: 15px; background: rgba(0,255,0,0.05); padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto;">`;
+                        successItems.forEach(detail => {
+                            const source = detail.source ? `(来源: ${detail.source})` : '';
+                            detailsHtml += `<div style="margin-bottom: 5px; font-size: 0.9rem;">✅ ${detail.original} → ${detail.moved_to} ${source}</div>`;
+                        });
+                        if (data.details.filter(d => d.success).length > 10) {
+                            detailsHtml += `<div style="font-style: italic; text-align: center; margin-top: 10px;">...等共 ${data.details.filter(d => d.success).length} 个成功项</div>`;
+                        }
+                        detailsHtml += `</div>`;
+                    }
+                }
+                
+                resultModal.innerHTML = `
+                    <div class="glass-card" style="max-width: 600px; max-height: 70vh; overflow-y: auto; margin: 20px; padding: 30px;">
+                        <h3 style="margin-bottom: 20px; text-align: center; color: #444;">🔧 修复结果</h3>
+                        
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                            <p style="color: #444; margin: 0; margin-bottom: 8px;">✅ ${data.message}</p>
+                            <p style="color: rgba(68,68,68,0.8); margin: 0; margin-bottom: 5px;">
+                                - 从uploads修复: ${data.fixed_count}个文件
+                            </p>
+                            <p style="color: rgba(68,68,68,0.8); margin: 0;">
+                                - 从备份恢复: ${data.backup_files_added}个文件
+                            </p>
+                        </div>
+                        
+                        ${detailsHtml}
+                        
+                        <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="glass-btn glass-btn-primary" onclick="showAvailableFiles(); this.closest('.modal').remove();" style="flex: 1;">
+                                📋 查看可下载文件
+                            </button>
+                            <button class="glass-btn glass-btn-danger" onclick="this.closest('.modal').remove()" style="flex: 1;">
+                                ❌ 关闭
+                            </button>
+                        </div>
+                    </div>
+                `;
+                resultModal.className = 'modal';
+                document.body.appendChild(resultModal);
+                
+                addLog(`自动修复完成: 恢复了 ${data.total_fixed} 个文件`, 'success');
+                
+                // 刷新下载列表
+                await refreshDownloadList();
+                
+                return data;
+                
+            } catch (error) {
+                // 关闭可能存在的加载提示
+                const loadingModal = document.querySelector('.loading-modal');
+                if (loadingModal) loadingModal.remove();
+                
+                console.error('自动修复失败:', error);
+                addLog(`自动修复失败: ${error.message}`, 'error');
+                alert('自动修复失败: ' + error.message);
+                
+                return null;
+            }
+        }
+
+    </script>
+</body>
+</html>
+
