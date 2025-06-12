@@ -1,15 +1,16 @@
-# PDF批量重命名工具 - AI高精度版本
+# PDF批量重命名工具 - AI高精度版本 v2.0
 
-🤖 基于EasyOCR AI引擎的高精度PDF批量重命名工具，采用现代化Liquid Glass粉色材质设计的Web界面。
+🤖 基于多引擎AI OCR技术的高精度PDF批量重命名工具，采用现代化Liquid Glass粉色材质设计的Web界面。
 
 ## ✨ 核心亮点
 
-- 🤖 **AI高精度OCR**: 集成EasyOCR深度学习引擎，识别精度高达95%+
+- 🤖 **多引擎AI OCR**: 集成EasyOCR、PaddleOCR、Tesseract三大引擎，识别精度高达95%+
 - 🎨 **Liquid Glass界面**: 现代化粉色玻璃质感设计，美观易用
-- 🔍 **智能双引擎**: EasyOCR主力 + Tesseract备用，确保最佳识别效果
+- 🔍 **智能多引擎**: EasyOCR主力 + PaddleOCR高精度 + Tesseract备用，确保最佳识别效果
 - 🔄 **智能角度检测**: 三种算法综合判断，自动校正任意角度旋转
 - 🚀 **性能优化**: 极简模式切换，适配不同设备性能
 - 📦 **安全下载**: 多种下载方式，原文件自动备份保护
+- ⚡ **智能安装**: 多种安装模式，自动环境检测和依赖管理
 
 ## 🚀 功能特点
 
@@ -25,20 +26,132 @@
 - ✅ **性能模式**: 标准模式/极简模式智能切换
 - ✅ **跨平台支持**: 通过浏览器访问，支持Windows、macOS、Linux
 
-## 📦 安装说明
+## 📦 快速开始
 
-### 🤖 方法一：一键安装EasyOCR（推荐）
+### 🚀 方法一：一键启动（推荐）
 ```bash
-# 自动安装EasyOCR和所有依赖
-python install_easyocr.py
-```
-这个脚本会：
-- ✅ 检查Python版本和GPU支持
-- ✅ 自动安装EasyOCR和PyTorch
-- ✅ 下载中英文AI识别模型
-- ✅ 测试安装是否成功
+# 克隆项目
+git clone <repository-url>
+cd pdf-webui-renamer
 
-### 📋 方法二：手动安装
+# 一键启动（自动检测环境并安装依赖）
+./start.sh
+```
+
+### ⚡ 方法二：快速启动（已安装依赖）
+```bash
+# 快速启动（适合已安装依赖的用户）
+./quick_start.sh
+```
+
+### 🔧 方法三：智能安装
+```bash
+# 智能安装程序（多种安装模式）
+python install.py
+```
+
+## 📋 详细安装说明
+
+### 🛠️ 安装脚本说明
+
+#### 1. `start.sh` - 完整启动脚本
+- ✅ 自动检测Python环境和版本
+- ✅ 智能安装系统依赖（Tesseract OCR）
+- ✅ 分步安装Python依赖包
+- ✅ 测试模块导入和OCR引擎
+- ✅ 自动查找可用端口并启动服务
+- ✅ 支持多种命令行参数
+
+```bash
+# 使用方法
+./start.sh                    # 正常启动
+./start.sh --install-only     # 仅安装依赖
+./start.sh --venv            # 使用虚拟环境
+./start.sh --port 9000       # 指定端口
+./start.sh --check          # 仅检查环境
+./start.sh --clean          # 清理临时文件
+./start.sh --help           # 显示帮助
+```
+
+#### 2. `install.py` - 智能安装程序
+- 🚀 **完整安装**: 安装所有OCR引擎（推荐）
+- ⚡ **快速安装**: 仅安装基础依赖和EasyOCR
+- 🔧 **自定义安装**: 选择要安装的组件
+- 📋 **仅基础依赖**: 不安装OCR引擎
+- ✅ 自动检测GPU支持和系统环境
+- ✅ 智能错误处理和重试机制
+
+```bash
+python install.py
+```
+
+#### 3. `check_env.py` - 环境检查工具
+- 🔍 检查Python版本和系统信息
+- 📦 检查所有依赖模块状态
+- 🤖 检查OCR引擎可用性
+- 💾 检查磁盘空间和GPU支持
+- 📊 生成详细的环境报告
+
+```bash
+python check_env.py
+```
+
+#### 4. `quick_start.sh` - 快速启动脚本
+- ⚡ 适合已安装依赖的用户
+- 🔍 自动查找Python命令和可用端口
+- 📁 自动创建必要目录
+- 🌐 自动打开浏览器
+
+```bash
+./quick_start.sh
+```
+
+### 🐍 Python环境要求
+- **Python版本**: 3.8+ （推荐3.9+）
+- **内存要求**: 4GB+ （推荐8GB+）
+- **磁盘空间**: 2GB+ （用于AI模型）
+- **网络要求**: 首次安装需要下载模型
+
+### 🔧 系统依赖
+
+#### macOS:
+```bash
+# 使用Homebrew安装Tesseract
+brew install tesseract tesseract-lang
+```
+
+#### Ubuntu/Debian:
+```bash
+sudo apt update
+sudo apt install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-chi-tra
+```
+
+#### CentOS/RHEL:
+```bash
+sudo yum install epel-release
+sudo yum install tesseract tesseract-langpack-chi_sim
+```
+
+### 📦 依赖管理
+
+#### 使用pip安装:
+```bash
+pip install -r requirements.txt
+```
+
+#### 使用Poetry安装:
+```bash
+# 安装Poetry
+curl -sSL https://install.python-poetry.org | python3 -
+
+# 安装依赖
+poetry install
+
+# 安装可选OCR引擎
+poetry install --extras "easyocr paddleocr"
+```
+
+### 📋 传统安装方法
 
 #### 1. 安装基础依赖
 ```bash
