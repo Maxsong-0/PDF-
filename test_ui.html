@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebUI优化测试页面</title>
+    <style>
+        body {
+            font-family: 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #f093fb 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            border-radius: 30px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #444;
+            margin-bottom: 30px;
+        }
+        .feature-list {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        .feature-text {
+            color: #444;
+            font-weight: 500;
+        }
+        .demo-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .demo-btn {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            color: #444;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.18);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 PDF批量重命名工具 - WebUI界面优化完成</h1>
+        
+        <div class="feature-list">
+            <h2 style="color: #444; margin-bottom: 20px;">✨ 主要优化内容</h2>
+            
+            <div class="feature-item">
+                <span class="feature-icon">📊</span>
+                <span class="feature-text">实时日志按钮移到左下角，增加更具体的状态显示和日志计数</span>
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">⚡</span>
+                <span class="feature-text">性能模式切换移到左上角，更醒目的位置和状态指示器</span>
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">📈</span>
+                <span class="feature-text">性能监控按钮集成到批量操作面板中，统一管理</span>
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">📱</span>
+                <span class="feature-text">响应式布局优化，针对移动端和桌面端进行适配</span>
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">🎨</span>
+                <span class="feature-text">按钮状态增加更详细的反馈，包括动画效果和状态指示器</span>
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">⌨️</span>
+                <span class="feature-text">新增键盘快捷键：Ctrl+L(日志)、Ctrl+P(性能)、Ctrl+M(模式)</span>
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">ℹ️</span>
+                <span class="feature-text">新增系统信息功能，显示详细的环境和配置信息</span>
+            </div>
+        </div>
+        
+        <div class="demo-buttons">
+            <div class="demo-btn">
+                <div style="font-size: 1.5rem; margin-bottom: 8px;">💾</div>
+                <div>自动备份</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">已开启</div>
+            </div>
+            
+            <div class="demo-btn">
+                <div style="font-size: 1.5rem; margin-bottom: 8px;">🔄</div>
+                <div>批量处理</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">智能识别</div>
+            </div>
+            
+            <div class="demo-btn">
+                <div style="font-size: 1.5rem; margin-bottom: 8px;">📊</div>
+                <div>性能监控</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">点击查看</div>
+            </div>
+            
+            <div class="demo-btn">
+                <div style="font-size: 1.5rem; margin-bottom: 8px;">ℹ️</div>
+                <div>系统信息</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">环境状态</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; color: #444;">
+            <p><strong>🚀 优化完成！</strong></p>
+            <p>新的界面布局更加直观，功能更加完善，用户体验显著提升。</p>
+            <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 15px;">
+                启动主程序查看完整效果：<code>python main.py</code>
+            </p>
+        </div>
+    </div>
+</body>
+</html> 
